@@ -19,12 +19,13 @@ EPİAŞ Şeffaflık Platformundaki hizmet kalitesini artırmak maksadıyla ayrı
 kullanıcılarına “Web Servis Hizmeti” de sunmaktadır. Talep eden kullanıcılar
 platformda yayımlanan tüm verilere buradan da kolaylıkla ulaşabilmektedir.
 
-Bu kütüphaneyi kullanacak kişilerin öncelikle Şeffaflık Platformu Web Servis
+Şeffaflık Platformu Web Servis Hizmetini ve dolayısıyla bu kütüphaneyi
+kullanacak kişilerin öncelikle Şeffaflık Platformu Web Servis
 Hizmeti ile tüm verilere ulaşabilme iznini almaları geremektedir. Bunun için
 öncelikle kullanıcıların Şeffaflık Platformunda yayımlanan
 [Web Servis Şartnamesini](https://www.epias.com.tr/wp-content/uploads/2016/10/Web-Servis-%C5%9Eartnamesi-1.docx)
-doldurmaları ve "seffaflik@epias.com.tr" mail adresi üzerinden firma ile
-paylaşmaları gerekmektedir.
+doldurmaları ve "seffaflik@epias.com.tr" mail adresi üzerinden doldurulmuş
+şartnameyi firma ile paylaşmaları gerekmektedir.
 
 ```python
 from seffaflik.ortak import araclar

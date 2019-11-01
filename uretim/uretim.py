@@ -76,6 +76,36 @@ def organizasyon_cekis_birimleri(eic):
         else:
             return df_unit
 
+def santral_cekis_birimleri(santral_id, tarih = __dt.datetime.today().strftime("%Y-%m-%d")):
+    """
+    İlgili tarih ve santral ID için santralin altında tanımlanmış uzlaştırmaya
+    esas veriş-çekiş birim (UEVÇB) bilgilerini vermektedir.
+
+    Parametreler
+    ------------
+    eic : metin formatında organizasyon eic kodu
+
+    Geri Dönüş Değeri
+    -----------------
+    İlgili  UEVÇB Bilgileri(Id, Adı, EIC Kodu)
+    """
+
+    while __dogrulama.tarih_dogrulama(tarih):
+        try:
+            resp = __requests.get(__transparency_url + "uevcb?period="+tarih+
+                    "&powerPlantId=" + santral_id,headers=__headers)
+            list_unit = resp.json()["body"]["uevcbList"]
+            df_unit = __pd.DataFrame(list_unit)
+            df_unit.rename(index=str, columns={"id": "Id", "name": "Adı", "eic": "EIC Kodu"}, inplace=True)
+            df_unit = df_unit[["Id", "Adı", "EIC Kodu"]]
+        except __requests.exceptions.RequestException as e:
+            return print(e)
+        except KeyError:
+            print("İlgili organizasyon için kayıt bulunmamaktadır!")
+            return __pd.DataFrame()
+        else:
+            return df_unit
+
 
 def tum_organizasyonlar_cekis_birimleri():
     """

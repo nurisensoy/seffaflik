@@ -59,7 +59,7 @@ def __change_df_eic_column_names_with_short_names(df, org):
     return df
 
 
-def kimlik_dosyasi_olustur(api_anahtari):
+def kimlik_dosyasi_olustur(istemci_taniticisi):
     """Kullanıcı adı ve api anahtar ikilisini `~/.seffaflik/.kimlik` içerisinde oluşturur.
 
     :param api_anahtari: Şeffaflık Platformuna kayıt olurken verilen api anahtarı
@@ -70,7 +70,7 @@ def kimlik_dosyasi_olustur(api_anahtari):
     if not __os.path.exists(seffaflik_dir):
         __os.makedirs(seffaflik_dir)
     kimlik_dosyasi = __os.path.join(seffaflik_dir, ".kimlik")
-    kimlik_bilgisi = {"api_anahtari": api_anahtari}
+    kimlik_bilgisi = {"istemci_taniticisi": istemci_taniticisi}
     json_string = __json.dumps(kimlik_bilgisi, indent=4)
     with open(kimlik_dosyasi, "w") as f:
         f.write(json_string)

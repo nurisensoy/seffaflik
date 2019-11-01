@@ -15,13 +15,26 @@ katılımcıların yapacakları işlemlerde doğru karar verebilmeleri için bir
 veri ve analiz platformu olan [“Şeffaflık Platformunu”](https://seffaflik.epias.com.tr) işletmektedir.
 
 ## Şeffaflık Platformu - Web Servis Hizmeti
-EPİAŞ Şaeffaflık Platformundaki hizmet kalitesini artırmak maksadıyla ayrıca
+EPİAŞ Şeffaflık Platformundaki hizmet kalitesini artırmak maksadıyla ayrıca
 kullanıcılarına “Web Servis Hizmeti” de sunmaktadır. Talep eden kullanıcılar
-platformda yaymlanan tüm verilere buradan da kolaylıkla ulaşabilmektedir.
+platformda yayımlanan tüm verilere buradan da kolaylıkla ulaşabilmektedir.
 
-Bu kütüphaneyi kullanacak kişilerin öncelikle EPİAŞ firması tarafından hizmete
-sunulmuş olan Şeffaflık Platformu API Portalindeki tüm verilere ulaşabilme
-iznini almaları geremektedir. Bunun için öncelikle kullanıcıların
-[Şeffaflık Platformunda](https://seffaflik.epias.com.tr) yayımlanan
+Bu kütüphaneyi kullanacak kişilerin öncelikle Şeffaflık Platformu Web Servis
+Hizmeti ile tüm verilere ulaşabilme iznini almaları geremektedir. Bunun için
+öncelikle kullanıcıların Şeffaflık Platformunda yayımlanan
 [Web Servis Şartnamesini](https://www.epias.com.tr/wp-content/uploads/2016/10/Web-Servis-%C5%9Eartnamesi-1.docx)
-doldurarak "seffaflik@epias.com.tr" mail adresi üzerinden firma ile paylaşmaları gerekmektedir.
+doldurmaları ve "seffaflik@epias.com.tr" mail adresi üzerinden firma ile
+paylaşmaları gerekmektedir.
+
+```python
+import seffaflik
+seffaflik.ortak.araclar.kimlik_dosyasi_olustur(istemci_taniticisi="abcdefg")
+```
+Yukarıdaki işlemi gerçekleştirmenizden sonra ana dizininize özel bir
+.seffaflik/.kimlik dosyası yerleştirir. ~/.seffaflik/.kimlik dosyanız aşağıdaki
+gibi görünmelidir:
+'''python
+{
+  "istemci_taniticisi" : "abcdefg"
+}
+'''

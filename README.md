@@ -27,14 +27,14 @@ doldurmaları ve "seffaflik@epias.com.tr" mail adresi üzerinden firma ile
 paylaşmaları gerekmektedir.
 
 ```python
-import seffaflik
-seffaflik.ortak.araclar.kimlik_dosyasi_olustur(istemci_taniticisi="abcdefg")
+from seffaflik.ortak import araclar
+araclar.kimlik_dosyasi_olustur(istemci_taniticisi="abcdefg")
 ```
 Yukarıdaki işlemi gerçekleştirmenizden sonra ana dizininize özel bir
 .seffaflik/.kimlik dosyası yerleştirir. ~/.seffaflik/.kimlik dosyanız aşağıdaki
 gibi görünmelidir:
-'''python
+```python
 {
-  "istemci_taniticisi" : "abcdefg"
+  "istemci_taniticisi": "abcdefg"
 }
-'''
+```

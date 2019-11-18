@@ -27,7 +27,7 @@ def santraller(tarih=__dt.datetime.now().strftime("%Y-%m-%d")):
     """
     if __dogrulama.tarih_dogrulama(tarih):
         try:
-            resp = __requests.get(__transparency_url + "power-plant?period=" + tarih)
+            resp = __requests.get(__transparency_url + "power-plant?period=" + tarih, headers=__headers)
             list_santral = resp.json()["body"]["powerPlantList"]
             df_santral = __pd.DataFrame(list_santral)
             df_santral.rename(index=str, columns={"id": "Id", "name": "Adı", "eic": "EIC Kodu",
@@ -55,7 +55,7 @@ def yekdem_santralleri(tarih=__dt.datetime.now().strftime("%Y-%m-%d")):
     """
     if __dogrulama.tarih_dogrulama(tarih):
         try:
-            resp = __requests.get(__transparency_url + "renewable-sm-licensed-power-plant-list?period=" + tarih)
+            resp = __requests.get(__transparency_url + "renewable-sm-licensed-power-plant-list?period=" + tarih, headers=__headers)
             list_santral = resp.json()["body"]["powerPlantList"]
             df_santral = __pd.DataFrame(list_santral)
             df_santral.rename(index=str, columns={"id": "Id", "name": "Adı", "eic": "EIC Kodu",
@@ -140,7 +140,7 @@ def ariza_bakim_bildirimleri(baslangic_tarihi=__dt.datetime.today().strftime("%Y
         try:
             resp = __requests.get(
                 __transparency_url + "urgent-market-message" + "?startDate=" + baslangic_tarihi +
-                "&endDate=" + bitis_tarihi + "&regionId=" + bolge_id)
+                "&endDate=" + bitis_tarihi + "&regionId=" + bolge_id, headers=__headers)
             list_bildirim = resp.json()["body"]["urgentMarketMessageList"]
             df_bildirim = __pd.DataFrame(list_bildirim)
             df_bildirim["caseAddDate"] = __pd.to_datetime(df_bildirim["caseAddDate"])
@@ -179,7 +179,7 @@ def __kurulu_guc(tarih):
     Kurulu Güç Bilgisi (Tarih, Kurulu Güç)
     """
     try:
-        resp = __requests.get(__transparency_url + "installed-capacity?period=" + tarih)
+        resp = __requests.get(__transparency_url + "installed-capacity?period=" + tarih, headers=__headers)
         list_guc = resp.json()["body"]["installedCapacityList"]
         df_guc = __pd.DataFrame(list_guc)
         df_guc = df_guc[df_guc["capacityType"] == "ALL"]
@@ -208,7 +208,7 @@ def __yekdem_kurulu_guc(tarih):
     Kurulu Güç Bilgisi (Tarih, Kurulu Güç)
     """
     try:
-        resp = __requests.get(__transparency_url + "installed-capacity-of-renewable?period=" + tarih)
+        resp = __requests.get(__transparency_url + "installed-capacity-of-renewable?period=" + tarih, headers=__headers)
         list_guc = resp.json()["body"]["installedCapacityOfRenewableList"]
         df_guc = __pd.DataFrame(list_guc)
         columns = df_guc["capacityType"].values

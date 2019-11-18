@@ -64,7 +64,7 @@ def kimlik_dosyasi_olustur(istemci_taniticisi):
 
     :param api_anahtari: Şeffaflık Platformuna kayıt olurken verilen api anahtarı
     """
-    HEADERS["x-ibm-client-id"] = api_anahtari
+    HEADERS["x-ibm-client-id"] = istemci_taniticisi
     seffaflik_dir = __os.environ.get("SEFFAFLIK_DIR",
                                      __os.path.join(__os.path.expanduser("~"), ".seffaflik"))
     if not __os.path.exists(seffaflik_dir):

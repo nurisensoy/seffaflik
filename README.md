@@ -27,6 +27,15 @@ Hizmeti ile tüm verilere ulaşabilme iznini almaları geremektedir. Bunun için
 doldurmaları ve "seffaflik@epias.com.tr" mail adresi üzerinden doldurulmuş
 şartnameyi firma ile paylaşmaları gerekmektedir.
 
+
+## Kurulum
+----------
+
+### pip aracılığıyla en son sürümü yükleyin
+```python
+$ pip install seffaflik
+```
+
 ```python
 from seffaflik.ortak import araclar
 araclar.kimlik_dosyasi_olustur(istemci_taniticisi="abcdefg")
@@ -39,3 +48,4 @@ gibi görünmelidir:
   "istemci_taniticisi": "abcdefg"
 }
 ```
+

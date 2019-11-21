@@ -26,23 +26,21 @@ doldurmaları ve "seffaflik@epias.com.tr" mail adresi üzerinden doldurulmuş
 şartnameyi firma ile paylaşmaları gerekmektedir.
 
 ## Kurulum
-### Gereksinimler (Requierements)
+### Gereksinimler (Requirements)
 seffaflik kütüphanesinin kullanımı için gerekli paketler:
 * pandas
 * requests
 * python-dateutils
 
 ### pip aracılığıyla en son sürümü yükleyin
-```python
+```
 $ pip install seffaflik
 ```
 
 ### İstemci Kimliği (Client Id) Oluşturulması
-
-
 ```python
-from seffaflik.ortak import araclar
-araclar.kimlik_dosyasi_olustur(istemci_kimligi="abcdefg")
+import seffaflik
+seffaflik.ortak.araclar.kimlik_dosyasi_olustur(istemci_kimligi="abcdefg")
 ```
 Yukarıdaki işlemi gerçekleştirmenizden sonra ana dizininize özel bir
 .seffaflik/.kimlik dosyası yerleştirir. ~/.seffaflik/.kimlik dosyanız aşağıdaki

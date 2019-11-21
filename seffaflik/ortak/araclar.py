@@ -62,7 +62,7 @@ def __change_df_eic_column_names_with_short_names(df, org):
 def kimlik_dosyasi_olustur(istemci_taniticisi):
     """Kullanıcı adı ve api anahtar ikilisini `~/.seffaflik/.kimlik` içerisinde oluşturur.
 
-    :param api_anahtari: Şeffaflık Platformuna kayıt olurken verilen api anahtarı
+    :param istemci_taniticisi: Şeffaflık Platformuna kayıt olurken verilen api anahtarı
     """
     HEADERS["x-ibm-client-id"] = istemci_taniticisi
     seffaflik_dir = __os.environ.get("SEFFAFLIK_DIR",

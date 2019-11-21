@@ -1,11 +1,10 @@
 import requests as __requests
 import pandas as __pd
 import datetime as __dt
-from seffaflik.ortak import parametreler as __param
-from seffaflik.ortak import anahtar as __api
-from seffaflik.ortak import dogrulama as __dogrulama
+import logging as __logging
 
-__hata = __param.BILINMEYEN_HATA_MESAJI
+from seffaflik.ortak import dogrulama as __dogrulama, parametreler as __param, anahtar as __api
+
 __transparency_url = __param.SEFFAFLIK_URL + "market/"
 __headers = __api.HEADERS
 
@@ -24,7 +23,7 @@ def smf(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
     ------
     Sistem Marjinal Fiyatı, Sistem Yönü
     """
-    while __dogrulama.baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+    while __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
             resp = __requests.get(
                 __transparency_url + "smp" + "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi,
@@ -38,10 +37,10 @@ def smf(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                           columns={"price": "SMF", "smpDirection": "Sistem Yönü"},
                           inplace=True)
             df_smf = df_smf[["Tarih", "Saat", "SMF", "Sistem Yönü"]]
-        except __requests.exceptions.RequestException as e:
-            print(e)
+        except __requests.exceptions.RequestException:
+            __logging.error(__param.__request_error, exc_info=True)
         except KeyError:
-            return print("İlgili tarih için veri bulunamamıştır!")
+            return __pd.DataFrame()
         else:
             return df_smf
 
@@ -60,7 +59,7 @@ def hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
     ------
     YAL/YAT Talimat Miktarları
     """
-    while __dogrulama.baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+    while __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
             resp = __requests.get(__transparency_url + "bpm-order-summary" +
                                   "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi,
@@ -82,9 +81,9 @@ def hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
             df_hacim = df_hacim[
                 ["Tarih", "Saat", "Net", "YAL (0)", "YAL (1)", "YAL (2)", "Teslim Edilen YAL", "YAT (0)", "YAT (1)",
                  "YAT (2)", "Teslim Edilen YAT", "Sistem Yönü"]]
-        except __requests.exceptions.RequestException as e:
-            print(e)
+        except __requests.exceptions.RequestException:
+            __logging.error(__param.__request_error, exc_info=True)
         except KeyError:
-            return print("İlgili tarih için veri bulunamamıştır!")
+            return __pd.DataFrame()
         else:
             return df_hacim

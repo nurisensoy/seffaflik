@@ -4,11 +4,10 @@ import datetime as __dt
 from dateutil import relativedelta as __rd
 from multiprocessing import Pool as __Pool
 import multiprocessing as __mp
-from seffaflik.ortak import dogrulama as __dogrulama
-from seffaflik.ortak import parametreler as __param
-from seffaflik.ortak import anahtar as __api
+import logging as __logging
 
-__hata = __param.BILINMEYEN_HATA_MESAJI
+from seffaflik.ortak import dogrulama as __dogrulama, parametreler as __param, anahtar as __api
+
 __transparency_url = __param.SEFFAFLIK_URL + "production/"
 __headers = __api.HEADERS
 
@@ -25,7 +24,7 @@ def santraller(tarih=__dt.datetime.now().strftime("%Y-%m-%d")):
     -----------------
     Santral Bilgileri(Id, Adı, EIC Kodu, Kısa Adı)
     """
-    if __dogrulama.tarih_dogrulama(tarih):
+    if __dogrulama.__tarih_dogrulama(tarih):
         try:
             resp = __requests.get(__transparency_url + "power-plant?period=" + tarih, headers=__headers)
             list_santral = resp.json()["body"]["powerPlantList"]
@@ -33,8 +32,8 @@ def santraller(tarih=__dt.datetime.now().strftime("%Y-%m-%d")):
             df_santral.rename(index=str, columns={"id": "Id", "name": "Adı", "eic": "EIC Kodu",
                                                   "shortName": "Kısa Adı"}, inplace=True)
             df_santral = df_santral[["Id", "Adı", "EIC Kodu", "Kısa Adı"]]
-        except __requests.exceptions.RequestException as e:
-            print(e)
+        except __requests.exceptions.RequestException:
+            __logging.error(__param.__request_error, exc_info=True)
         except KeyError:
             __pd.DataFrame()
         else:
@@ -53,7 +52,7 @@ def yekdem_santralleri(tarih=__dt.datetime.now().strftime("%Y-%m-%d")):
     -----------------
     Santral Bilgileri(Id, Adı, EIC Kodu, Kısa Adı)
     """
-    if __dogrulama.tarih_dogrulama(tarih):
+    if __dogrulama.__tarih_dogrulama(tarih):
         try:
             resp = __requests.get(__transparency_url + "renewable-sm-licensed-power-plant-list?period=" + tarih,
                                   headers=__headers)
@@ -62,8 +61,8 @@ def yekdem_santralleri(tarih=__dt.datetime.now().strftime("%Y-%m-%d")):
             df_santral.rename(index=str, columns={"id": "Id", "name": "Adı", "eic": "EIC Kodu",
                                                   "shortName": "Kısa Adı"}, inplace=True)
             df_santral = df_santral[["Id", "Adı", "EIC Kodu", "Kısa Adı"]]
-        except __requests.exceptions.RequestException as e:
-            print(e)
+        except __requests.exceptions.RequestException:
+            __logging.error(__param.__request_error, exc_info=True)
         except KeyError:
             __pd.DataFrame()
         else:
@@ -85,7 +84,7 @@ def kurulu_guc(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
     -----------------
     Kurulu Güç Bilgisi (Tarih, Kurulu Güç)
     """
-    if __dogrulama.baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         ilk = __dt.datetime.strptime(baslangic_tarihi[:7], '%Y-%m')
         son = __dt.datetime.strptime(bitis_tarihi[:7], '%Y-%m')
         date_list = []
@@ -112,7 +111,7 @@ def yekdem_kurulu_guc(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"
     -----------------
     Kurulu Güç Bilgisi (Tarih, Kurulu Güç)
     """
-    if __dogrulama.baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         ilk = __dt.datetime.strptime(baslangic_tarihi[:7], '%Y-%m')
         son = __dt.datetime.strptime(bitis_tarihi[:7], '%Y-%m')
         date_list = []
@@ -137,7 +136,7 @@ def ariza_bakim_bildirimleri(baslangic_tarihi=__dt.datetime.today().strftime("%Y
     -----------------
     Santral Bilgileri(Id, Adı, EIC Kodu, Kısa Adı)
     """
-    if __dogrulama.baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
             resp = __requests.get(
                 __transparency_url + "urgent-market-message" + "?startDate=" + baslangic_tarihi +
@@ -159,10 +158,10 @@ def ariza_bakim_bildirimleri(baslangic_tarihi=__dt.datetime.today().strftime("%Y
                 ["Olay Bildirim Tarihi", "Santral Adı", "UEVCB Adı", "Şehir", "Olay Balangıç Tarihi",
                  "Olay Bitiş Tarihi", "İşletmedeki Kurulu Güç", "Olay Sırasında Kapasite", "Yakıt Tipi", "Gerekçe",
                  "Gerekçe Tipi"]]
-        except __requests.exceptions.RequestException as e:
-            print(e)
+        except __requests.exceptions.RequestException:
+            __logging.error(__param.__request_error, exc_info=True)
         except KeyError:
-            return print("İlgili tarih için veri bulunmamaktadır!")
+            return __pd.DataFrame()
         else:
             return df_bildirim
 
@@ -187,8 +186,8 @@ def __kurulu_guc(tarih):
         df_guc.insert(loc=0, column="Tarih", value=__pd.to_datetime(tarih))
         df_guc.rename(index=str, columns={"capacity": "Kurulu Güç"}, inplace=True)
         df_guc = df_guc[["Tarih", "Kurulu Güç"]]
-    except __requests.exceptions.RequestException as e:
-        print(e)
+    except __requests.exceptions.RequestException:
+        __logging.error(__param.__request_error, exc_info=True)
     except KeyError:
         return __pd.DataFrame()
     else:
@@ -217,8 +216,8 @@ def __yekdem_kurulu_guc(tarih):
         df_guc.set_axis(columns, axis=1, inplace=True)
         df_guc.reset_index(drop=True, inplace=True)
         df_guc.insert(loc=0, column="Tarih", value=__pd.to_datetime(tarih))
-    except __requests.exceptions.RequestException as e:
-        print(e)
+    except __requests.exceptions.RequestException:
+        __logging.error(__param.__request_error, exc_info=True)
     except KeyError:
         return __pd.DataFrame()
     else:

@@ -4,13 +4,10 @@ import datetime as __dt
 from multiprocessing import Pool as __Pool
 import multiprocessing as __mp
 from functools import reduce as __red
+import logging as __logging
 
-from seffaflik.ortak import araclar as __araclar
-from seffaflik.ortak import dogrulama as __dogrulama
-from seffaflik.ortak import parametreler as __param
-from seffaflik.ortak import anahtar as __api
+from seffaflik.ortak import araclar as __araclar, dogrulama as __dogrulama, parametreler as __param, anahtar as __api
 
-__hata = __param.BILINMEYEN_HATA_MESAJI
 __transparency_url = __param.SEFFAFLIK_URL + "production/"
 __headers = __api.HEADERS
 
@@ -37,10 +34,9 @@ def organizasyonlar():
                                    "organizationStatus": "Durum"},
                           inplace=True)
             df_org = df_org[["Id", "Adı", "EIC Kodu", "Kısa Adı", "Durum"]]
-        except __requests.exceptions.RequestException as e:
-            print(e)
+        except __requests.exceptions.RequestException:
+            __logging.error(__param.__request_error, exc_info=True)
         except KeyError:
-            print("Veri bulunmamaktadır!")
             return __pd.DataFrame()
         else:
             return df_org
@@ -60,7 +56,7 @@ def organizasyon_cekis_birimleri(eic):
     KGÜP Girebilen Organizasyonun UEVÇB Bilgileri(Id, Adı, EIC Kodu)
     """
 
-    while __dogrulama.kgup_girebilen_organizasyon_dogrulama(eic):
+    while __dogrulama.__kgup_girebilen_organizasyon_dogrulama(eic):
         try:
             resp = __requests.get(__transparency_url + "dpp-injection-unit-name?organizationEIC=" + eic,
                                   headers=__headers)
@@ -68,15 +64,15 @@ def organizasyon_cekis_birimleri(eic):
             df_unit = __pd.DataFrame(list_unit)
             df_unit.rename(index=str, columns={"id": "Id", "name": "Adı", "eic": "EIC Kodu"}, inplace=True)
             df_unit = df_unit[["Id", "Adı", "EIC Kodu"]]
-        except __requests.exceptions.RequestException as e:
-            return print(e)
+        except __requests.exceptions.RequestException:
+            __logging.error(__param.__request_error, exc_info=True)
         except KeyError:
-            print("İlgili organizasyon için kayıt bulunmamaktadır!")
             return __pd.DataFrame()
         else:
             return df_unit
 
-def santral_cekis_birimleri(santral_id, tarih = __dt.datetime.today().strftime("%Y-%m-%d")):
+
+def santral_cekis_birimleri(santral_id, tarih=__dt.datetime.today().strftime("%Y-%m-%d")):
     """
     İlgili tarih ve santral ID için santralin altında tanımlanmış uzlaştırmaya
     esas veriş-çekiş birim (UEVÇB) bilgilerini vermektedir.
@@ -90,18 +86,17 @@ def santral_cekis_birimleri(santral_id, tarih = __dt.datetime.today().strftime("
     İlgili  UEVÇB Bilgileri(Id, Adı, EIC Kodu)
     """
 
-    while __dogrulama.tarih_dogrulama(tarih):
+    while __dogrulama.__tarih_dogrulama(tarih):
         try:
-            resp = __requests.get(__transparency_url + "uevcb?period="+tarih+
-                    "&powerPlantId=" + santral_id,headers=__headers)
+            resp = __requests.get(__transparency_url + "uevcb?period=" + tarih +
+                                  "&powerPlantId=" + santral_id, headers=__headers)
             list_unit = resp.json()["body"]["uevcbList"]
             df_unit = __pd.DataFrame(list_unit)
             df_unit.rename(index=str, columns={"id": "Id", "name": "Adı", "eic": "EIC Kodu"}, inplace=True)
             df_unit = df_unit[["Id", "Adı", "EIC Kodu"]]
-        except __requests.exceptions.RequestException as e:
-            return print(e)
+        except __requests.exceptions.RequestException:
+            __logging.error(__param.__request_error, exc_info=True)
         except KeyError:
-            print("İlgili organizasyon için kayıt bulunmamaktadır!")
             return __pd.DataFrame()
         else:
             return df_unit
@@ -146,7 +141,7 @@ def kgup(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
     KGUP (Tarih, Saat, Doğalgaz, Barajlı, Linyit, Akarsu, İthal Kömür, Rüzgar, Fuel Oil, Jeo Termal, Taş Kömür, Biokütle
     ,Nafta, Diğer, Toplam)
     """
-    while __dogrulama.baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+    while __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
             resp = __requests.get(
                 __transparency_url + "dpp" + "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi +
@@ -162,10 +157,10 @@ def kgup(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                                     "ruzgar": "Rüzgar", "tasKomur": "Taş Kömür", "toplam": "Toplam"}, inplace=True)
             df_kgup = df_kgup[["Tarih", "Saat", "Doğalgaz", "Barajlı", "Linyit", "Akarsu", "İthal Kömür", "Rüzgar",
                                "Fuel Oil", "Jeo Termal", "Taş Kömür", "Biokütle", "Nafta", "Diğer", "Toplam"]]
-        except __requests.exceptions.RequestException as e:
-            print(e)
+        except __requests.exceptions.RequestException:
+            __logging.error(__param.__request_error, exc_info=True)
         except KeyError:
-            return print("İlgili tarih için veri bulunmamaktadır!")
+            return __pd.DataFrame()
         else:
             return df_kgup
 
@@ -185,7 +180,7 @@ def tum_organizasyonlar_kgup(baslangic_tarihi=__dt.datetime.today().strftime("%Y
     -----------------
     KGÜP Girebilen Organizasyonların KGUP Değerleri (Tarih, Saat, KGUP)
     """
-    if __dogrulama.baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         org = organizasyonlar()
         list_org_eic = list(org["EIC Kodu"])
         org_len = len(list_org_eic)
@@ -220,7 +215,7 @@ def eak(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
     EAK (Tarih, Saat, Doğalgaz, Barajlı, Linyit, Akarsu, İthal Kömür, Rüzgar, Fuel Oil, Jeo Termal, Taş Kömür, Biokütle,
     Nafta, Diğer, Toplam)
     """
-    while __dogrulama.baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+    while __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
             resp = __requests.get(
                 __transparency_url + "aic" + "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi +
@@ -236,10 +231,10 @@ def eak(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                                    "ruzgar": "Rüzgar", "tasKomur": "Taş Kömür", "toplam": "Toplam"}, inplace=True)
             df_aic = df_aic[["Tarih", "Saat", "Doğalgaz", "Barajlı", "Linyit", "Akarsu", "İthal Kömür", "Rüzgar",
                              "Fuel Oil", "Jeo Termal", "Taş Kömür", "Biokütle", "Nafta", "Diğer", "Toplam"]]
-        except __requests.exceptions.RequestException as e:
-            print(e)
+        except __requests.exceptions.RequestException:
+            __logging.error(__param.__request_error, exc_info=True)
         except KeyError:
-            return print("İlgili tarih için veri bulunmamaktadır!")
+            return __pd.DataFrame()
         else:
             return df_aic
 
@@ -259,7 +254,7 @@ def tum_organizasyonlar_eak(baslangic_tarihi=__dt.datetime.today().strftime("%Y-
     -----------------
     EAK Girebilen Organizasyonların EAK Değerleri (Tarih, Saat, EAK)
     """
-    if __dogrulama.baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         org = organizasyonlar()
         list_org_eic = list(org["EIC Kodu"])
         org_len = len(list_org_eic)
@@ -295,7 +290,7 @@ def kudup(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
     KUDÜP (Tarih, Saat, Doğalgaz, Barajlı, Linyit, Akarsu, İthal Kömür, Rüzgar, Fuel Oil, Jeo Termal, Taş Kömür,
     Biokütle, Nafta, Diğer, Toplam)
     """
-    while __dogrulama.baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+    while __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
             resp = __requests.get(
                 __transparency_url + "sbfgp" + "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi +
@@ -311,10 +306,10 @@ def kudup(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                                     "ruzgar": "Rüzgar", "tasKomur": "Taş Kömür", "toplam": "Toplam"}, inplace=True)
             df_kgup = df_kgup[["Tarih", "Saat", "Doğalgaz", "Barajlı", "Linyit", "Akarsu", "İthal Kömür", "Rüzgar",
                                "Fuel Oil", "Jeo Termal", "Taş Kömür", "Biokütle", "Nafta", "Diğer", "Toplam"]]
-        except __requests.exceptions.RequestException as e:
-            print(e)
+        except __requests.exceptions.RequestException:
+            __logging.error(__param.__request_error, exc_info=True)
         except KeyError:
-            return print("İlgili tarih için veri bulunmamaktadır!")
+            return __pd.DataFrame()
         else:
             return df_kgup
 
@@ -333,7 +328,7 @@ def gerceklesen(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
     -----------------
     Gerçek Zamanlı Üretim(Id, Adı, EIC Kodu, Kısa Adı)
     """
-    while __dogrulama.baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+    while __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
             resp = __requests.get(
                 __transparency_url + "real-time-generation" + "?startDate=" + baslangic_tarihi + "&endDate="
@@ -353,10 +348,10 @@ def gerceklesen(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                 ["Tarih", "Saat", "Doğalgaz", "Barajlı", "Linyit", "Akarsu", "İthal Kömür", "Rüzgar", "Güneş",
                  "Fuel Oil", "Jeo Termal", "Asfaltit Kömür", "Taş Kömür", "Biokütle", "Nafta", "LNG", "Uluslararası",
                  "Toplam"]]
-        except __requests.exceptions.RequestException as e:
-            print(e)
+        except __requests.exceptions.RequestException:
+            __logging.error(__param.__request_error, exc_info=True)
         except KeyError:
-            return print("İlgili tarih için veri bulunmamaktadır!")
+            return __pd.DataFrame()
         else:
             return df_uretim
 
@@ -376,7 +371,7 @@ def __organizasyon_cekis_birimleri(eic):
     UEVÇB EIC Kodu)
     """
 
-    while __dogrulama.kgup_girebilen_organizasyon_dogrulama(eic):
+    while __dogrulama.__kgup_girebilen_organizasyon_dogrulama(eic):
         try:
             resp = __requests.get(__transparency_url + "dpp-injection-unit-name?organizationEIC=" + eic,
                                   headers=__headers)
@@ -394,8 +389,8 @@ def __organizasyon_cekis_birimleri(eic):
                            inplace=True)
             df_unit = df_unit[["Org Id", "Org Adı", "Org EIC Kodu", "Org Kısa Adı",
                                "Org Durum", "UEVÇB Id", "UEVÇB Adı", "UEVÇB EIC Kodu"]]
-        except __requests.exceptions.RequestException as e:
-            return print(e)
+        except __requests.exceptions.RequestException:
+            __logging.error(__param.__request_error, exc_info=True)
         except KeyError:
             return __pd.DataFrame()
         else:
@@ -416,7 +411,7 @@ def __kgup(baslangic_tarihi, bitis_tarihi, organizasyon_eic):
     -----------------
     Tum organizasyon KGUP değerleri
     """
-    while __dogrulama.baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+    while __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
             resp = __requests.get(
                 __transparency_url + "dpp" + "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi +
@@ -427,8 +422,8 @@ def __kgup(baslangic_tarihi, bitis_tarihi, organizasyon_eic):
             df_kgup["Tarih"] = __pd.to_datetime(df_kgup["tarih"].apply(lambda d: d[:10]))
             df_kgup.rename(index=str, columns={"toplam": organizasyon_eic}, inplace=True)
             df_kgup = df_kgup[["Tarih", "Saat", organizasyon_eic]]
-        except __requests.exceptions.RequestException as e:
-            print(e)
+        except __requests.exceptions.RequestException:
+            __logging.error(__param.__request_error, exc_info=True)
         except KeyError:
             return __pd.DataFrame()
         else:
@@ -450,7 +445,7 @@ def __eak(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
     -----------------
     Tum organizasyon EAK değerleri
     """
-    while __dogrulama.baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+    while __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
             resp = __requests.get(
                 __transparency_url + "aic" + "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi +
@@ -461,8 +456,8 @@ def __eak(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
             df_aic["Tarih"] = __pd.to_datetime(df_aic["tarih"].apply(lambda d: d[:10]))
             df_aic.rename(index=str, columns={"toplam": organizasyon_eic}, inplace=True)
             df_aic = df_aic[["Tarih", "Saat", organizasyon_eic]]
-        except __requests.exceptions.RequestException as e:
-            print(e)
+        except __requests.exceptions.RequestException:
+            __logging.error(__param.__request_error, exc_info=True)
         except KeyError:
             return __pd.DataFrame()
         else:

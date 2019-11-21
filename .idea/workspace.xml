@@ -2,10 +2,20 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="7810ed04-bcc4-4b03-b0f7-5dd931e6157e" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/dictionaries/nuri_sensoy.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-    </list>
-    <list id="2c0f7751-daec-45be-8c60-4015b658c8e3" name="Revert &quot;api_key bug fix&quot;" comment="Revert &quot;api_key bug fix&quot;&#10;&#10;This reverts commit cdb4fcda">
+      <change beforePath="$PROJECT_DIR$/seffaflik/elektrik/iletim/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/seffaflik/elektrik/iletim/iletim.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/seffaflik/elektrik/piyasalar/dgp.py" beforeDir="false" afterPath="$PROJECT_DIR$/seffaflik/elektrik/piyasalar/dgp.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/seffaflik/elektrik/piyasalar/gip.py" beforeDir="false" afterPath="$PROJECT_DIR$/seffaflik/elektrik/piyasalar/gip.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/seffaflik/elektrik/piyasalar/gop.py" beforeDir="false" afterPath="$PROJECT_DIR$/seffaflik/elektrik/piyasalar/gop.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/seffaflik/elektrik/piyasalar/ia.py" beforeDir="false" afterPath="$PROJECT_DIR$/seffaflik/elektrik/piyasalar/ia.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/seffaflik/elektrik/tuketim/tuketim.py" beforeDir="false" afterPath="$PROJECT_DIR$/seffaflik/elektrik/tuketim/tuketim.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/seffaflik/elektrik/uretim/santraller.py" beforeDir="false" afterPath="$PROJECT_DIR$/seffaflik/elektrik/uretim/santraller.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/seffaflik/elektrik/uretim/uretim.py" beforeDir="false" afterPath="$PROJECT_DIR$/seffaflik/elektrik/uretim/uretim.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/seffaflik/ortak/araclar.py" beforeDir="false" afterPath="$PROJECT_DIR$/seffaflik/ortak/araclar.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/seffaflik/ortak/dogrulama.py" beforeDir="false" afterPath="$PROJECT_DIR$/seffaflik/ortak/dogrulama.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/seffaflik/ortak/parametreler.py" beforeDir="false" afterPath="$PROJECT_DIR$/seffaflik/ortak/parametreler.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -16,12 +26,12 @@
   <component name="FileEditorManager">
     <leaf>
       <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/seffaflik/ortak/araclar.py">
+        <entry file="file://$PROJECT_DIR$/seffaflik/ortak/dogrulama.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="323">
-              <caret line="66" column="21" selection-start-line="66" selection-start-column="21" selection-end-line="66" selection-end-column="21" />
+            <state relative-caret-position="559">
+              <caret line="37" column="29" selection-start-line="37" selection-start-column="29" selection-end-line="37" selection-end-column="29" />
               <folding>
-                <element signature="e#0#17#0" expanded="true" />
+                <element signature="e#0#29#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -39,6 +49,7 @@
   <component name="FindInProjectRecents">
     <findStrings>
       <find>__organizasyonlar</find>
+      <find>print</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -62,18 +73,17 @@
         <option value="$PROJECT_DIR$/elektrik/uretim/uretim.py" />
         <option value="$PROJECT_DIR$/ortak/araclar.py" />
         <option value="$PROJECT_DIR$/elektrik/piyasalar/gop.py" />
-        <option value="$PROJECT_DIR$/seffaflik/ortak/araclar.py" />
+        <option value="$PROJECT_DIR$/seffaflik/elektrik/iletim/iletim.py" />
+        <option value="$PROJECT_DIR$/seffaflik/ortak/parametreler.py" />
+        <option value="$PROJECT_DIR$/seffaflik/elektrik/tuketim/tuketim.py" />
+        <option value="$PROJECT_DIR$/seffaflik/elektrik/piyasalar/gop.py" />
+        <option value="$PROJECT_DIR$/seffaflik/elektrik/piyasalar/gip.py" />
+        <option value="$PROJECT_DIR$/seffaflik/elektrik/piyasalar/ia.py" />
+        <option value="$PROJECT_DIR$/seffaflik/elektrik/piyasalar/dgp.py" />
         <option value="$PROJECT_DIR$/seffaflik/elektrik/uretim/santraller.py" />
-      </list>
-    </option>
-  </component>
-  <component name="ProjectConfigurationFiles">
-    <option name="files">
-      <list>
-        <option value="$PROJECT_DIR$/.idea/seffaflik.iml" />
-        <option value="$PROJECT_DIR$/.idea/vcs.xml" />
-        <option value="$PROJECT_DIR$/.idea/misc.xml" />
-        <option value="$PROJECT_DIR$/.idea/modules.xml" />
+        <option value="$PROJECT_DIR$/seffaflik/elektrik/uretim/uretim.py" />
+        <option value="$PROJECT_DIR$/seffaflik/ortak/araclar.py" />
+        <option value="$PROJECT_DIR$/seffaflik/ortak/dogrulama.py" />
       </list>
     </option>
   </component>
@@ -111,6 +121,27 @@
               <item name="seffaflik" type="b2602c69:ProjectViewProjectNode" />
               <item name="seffaflik" type="462c0819:PsiDirectoryNode" />
               <item name="seffaflik" type="462c0819:PsiDirectoryNode" />
+              <item name="elektrik" type="462c0819:PsiDirectoryNode" />
+              <item name="piyasalar" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="seffaflik" type="b2602c69:ProjectViewProjectNode" />
+              <item name="seffaflik" type="462c0819:PsiDirectoryNode" />
+              <item name="seffaflik" type="462c0819:PsiDirectoryNode" />
+              <item name="elektrik" type="462c0819:PsiDirectoryNode" />
+              <item name="tuketim" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="seffaflik" type="b2602c69:ProjectViewProjectNode" />
+              <item name="seffaflik" type="462c0819:PsiDirectoryNode" />
+              <item name="seffaflik" type="462c0819:PsiDirectoryNode" />
+              <item name="elektrik" type="462c0819:PsiDirectoryNode" />
+              <item name="uretim" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="seffaflik" type="b2602c69:ProjectViewProjectNode" />
+              <item name="seffaflik" type="462c0819:PsiDirectoryNode" />
+              <item name="seffaflik" type="462c0819:PsiDirectoryNode" />
               <item name="ortak" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
@@ -126,6 +157,7 @@
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
+    <property name="settings.editor.selected.configurable" value="reference.settings.ide.settings.spelling" />
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
@@ -168,27 +200,35 @@
       <option name="project" value="LOCAL" />
       <updated>1574341672449</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="header is added in santraller.py">
+      <created>1574341684051</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1574341684051</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="3557000" />
+    <option name="totallyTimeSpent" value="5862000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-7" y="-7" width="1933" height="1053" extended-state="6" />
+    <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.24986681" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.24986681" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
-      <window_info anchor="bottom" id="Find" order="1" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.28138527" />
       <window_info anchor="bottom" id="Run" order="2" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
-      <window_info active="true" anchor="bottom" id="Version Control" order="8" visible="true" weight="0.32900432" />
+      <window_info anchor="bottom" id="Version Control" order="8" visible="true" weight="0.19588745" />
       <window_info anchor="bottom" id="Database Changes" order="9" />
       <window_info anchor="bottom" id="Event Log" order="10" side_tool="true" />
       <window_info anchor="bottom" id="Terminal" order="11" weight="0.37229437" />
@@ -253,70 +293,26 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/__init__.py" />
-    <entry file="file://$PROJECT_DIR$/seffaflik/ortak/parametreler.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/seffaflik/ortak/dogrulama.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="153">
-          <caret line="9" column="24" selection-start-line="9" selection-start-column="24" selection-end-line="9" selection-end-column="24" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/seffaflik/elektrik/__init__.py">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
     <entry file="file://$PROJECT_DIR$/seffaflik/__init__.py">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/seffaflik/ortak/anahtar.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="170">
-          <caret line="10" column="38" lean-forward="true" selection-start-line="10" selection-start-column="38" selection-end-line="10" selection-end-column="38" />
-          <folding>
-            <element signature="e#0#17#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
+    <entry file="file://$PROJECT_DIR$/seffaflik/elektrik/iletim/iletim.py">
+      <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/seffaflik/elektrik/uretim/uretim.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="357">
-          <caret line="30" column="92" selection-start-line="30" selection-start-column="73" selection-end-line="30" selection-end-column="92" />
-          <folding>
-            <element signature="e#0#29#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/seffaflik/elektrik/uretim/santraller.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="300">
-          <caret line="56" column="12" lean-forward="true" selection-start-line="56" selection-start-column="12" selection-end-line="56" selection-end-column="12" />
-          <folding>
-            <element signature="e#0#29#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/seffaflik/elektrik/tuketim/tuketim.py">
+    <entry file="file://$PROJECT_DIR$/seffaflik/ortak/parametreler.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="34">
-          <caret line="6" column="5" selection-start-line="6" selection-start-column="5" selection-end-line="6" selection-end-column="5" />
+          <caret line="2" selection-start-line="2" selection-end-line="2" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/seffaflik/elektrik/piyasalar/ia.py">
+    <entry file="file://$PROJECT_DIR$/seffaflik/elektrik/piyasalar/dgp.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-204">
-          <caret line="6" column="14" selection-start-line="6" selection-start-column="5" selection-end-line="6" selection-end-column="14" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/seffaflik/elektrik/piyasalar/gop.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-136">
-          <caret line="12" selection-start-line="12" selection-end-line="12" />
+        <state relative-caret-position="221">
+          <caret line="36" column="39" selection-start-line="36" selection-start-column="39" selection-end-line="36" selection-end-column="39" />
           <folding>
             <element signature="e#0#29#0" expanded="true" />
           </folding>
@@ -325,24 +321,84 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/seffaflik/elektrik/piyasalar/gip.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-136">
-          <caret line="3" column="14" selection-start-line="3" selection-start-column="5" selection-end-line="3" selection-end-column="14" />
+        <state relative-caret-position="222">
+          <caret line="261" column="59" selection-start-line="261" selection-start-column="59" selection-end-line="261" selection-end-column="59" />
+          <folding>
+            <element signature="e#0#29#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/seffaflik/elektrik/piyasalar/dgp.py">
+    <entry file="file://$PROJECT_DIR$/seffaflik/elektrik/piyasalar/gop.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-17">
-          <caret line="2" column="23" selection-start-line="2" selection-start-column="23" selection-end-line="2" selection-end-column="23" />
+        <state relative-caret-position="221">
+          <caret line="39" column="50" selection-start-line="39" selection-start-column="50" selection-end-line="39" selection-end-column="50" />
+          <folding>
+            <element signature="e#0#29#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/seffaflik/elektrik/piyasalar/ia.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="51">
+          <caret line="3" column="12" selection-start-line="3" selection-start-column="10" selection-end-line="3" selection-end-column="12" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/seffaflik/elektrik/tuketim/tuketim.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="221">
+          <caret line="16" column="5" selection-start-line="16" selection-start-column="5" selection-end-line="16" selection-end-column="5" />
+          <folding>
+            <element signature="e#0#29#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/seffaflik/elektrik/uretim/santraller.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="68">
+          <caret line="4" column="12" selection-start-line="4" selection-start-column="12" selection-end-line="4" selection-end-column="12" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/seffaflik/elektrik/uretim/uretim.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="221">
+          <caret line="401" column="75" selection-start-line="401" selection-start-column="75" selection-end-line="401" selection-end-column="75" />
+          <folding>
+            <element signature="e#0#29#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/seffaflik/ortak/anahtar.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="85">
+          <caret line="5" column="10" selection-start-line="5" selection-start-column="10" selection-end-line="5" selection-end-column="10" />
+          <folding>
+            <element signature="e#0#17#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/seffaflik/ortak/araclar.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="323">
-          <caret line="66" column="21" selection-start-line="66" selection-start-column="21" selection-end-line="66" selection-end-column="21" />
+        <state relative-caret-position="221">
+          <caret line="54" column="27" selection-start-line="54" selection-start-column="27" selection-end-line="54" selection-end-column="27" />
           <folding>
             <element signature="e#0#17#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/seffaflik/ortak/dogrulama.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="559">
+          <caret line="37" column="29" selection-start-line="37" selection-start-column="29" selection-end-line="37" selection-end-column="29" />
+          <folding>
+            <element signature="e#0#29#0" expanded="true" />
           </folding>
         </state>
       </provider>

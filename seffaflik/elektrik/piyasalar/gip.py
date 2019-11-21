@@ -1,11 +1,10 @@
 import requests as __requests
 import pandas as __pd
 import datetime as __dt
-from seffaflik.ortak import parametreler as __param
-from seffaflik.ortak import anahtar as __api
-from seffaflik.ortak import dogrulama as __dogrulama
+import logging as __logging
 
-__hata = __param.BILINMEYEN_HATA_MESAJI
+from seffaflik.ortak import dogrulama as __dogrulama, parametreler as __param, anahtar as __api
+
 __transparency_url = __param.SEFFAFLIK_URL + "market/"
 __headers = __api.HEADERS
 
@@ -25,7 +24,7 @@ def ozet(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
     Özet (Tarih, Saat, Id, Kontrat Adı, Teklif Edilen Alış/Satış Miktarları, Eşleşme Miktarı, İşlem Hacmi,
     Min. Alış/Satış Fiyatları, Max. Alış/Satış Fiyatları, Min./Max. Eşleşme Fiyatları)
     """
-    while __dogrulama.baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+    while __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
             resp = __requests.get(__transparency_url + "intra-day-summary" +
                                   "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi,
@@ -50,10 +49,10 @@ def ozet(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                  "Eşleşme Miktarı", "İşlem Hacmi", "Min. Alış Fiyatı", "Max. Alış Fiyatı",
                  "Min. Satış Fiyatı", "Max. Satış Fiyatı",
                  "Min. Eşleşme Fiyatı", "Max. Eşleşme Fiyatı"]]
-        except __requests.exceptions.RequestException as e:
-            print(e)
+        except __requests.exceptions.RequestException:
+            __logging.error(__param.__request_error, exc_info=True)
         except KeyError:
-            return print("İlgili tarih aralığı için veri bulunmamaktadır!")
+            return __pd.DataFrame()
         else:
             return df_ozet
 
@@ -72,7 +71,7 @@ def aof(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
     -----------------
     Ağırlıklı Ortalama Fiyat (₺/MWh)
     """
-    if __dogrulama.baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
             resp = __requests.get(
                 __transparency_url + "intra-day-aof" + "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi,
@@ -84,10 +83,10 @@ def aof(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
             df_aof.drop("date", axis=1, inplace=True)
             df_aof.rename(index=str, columns={"price": "AOF"}, inplace=True)
             df_aof = df_aof[["Tarih", "Saat", "AOF"]]
-        except __requests.exceptions.RequestException as e:
-            print(e)
+        except __requests.exceptions.RequestException:
+            __logging.error(__param.__request_error, exc_info=True)
         except KeyError:
-            return print("İlgili tarih aralığı için veri bulunmamaktadır!")
+            return __pd.DataFrame()
         else:
             return df_aof
 
@@ -106,7 +105,7 @@ def eslesme_miktari(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
     ------
     Eşleşme Miktarı (MWh)
     """
-    while __dogrulama.baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+    while __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
             resp = __requests.get(__transparency_url + "intra-day-volume" +
                                   "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi,
@@ -123,10 +122,10 @@ def eslesme_miktari(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
             df_hacim.fillna(0.0, inplace=True)
             df_hacim["Eşleşme Miktarı"] = df_hacim["Blok Eşleşme Miktarı"] + df_hacim["Saatlik Eşleşme Miktarı"]
             df_hacim = df_hacim[["Tarih", "Saat", "Blok Eşleşme Miktarı", "Saatlik Eşleşme Miktarı", "Eşleşme Miktarı"]]
-        except __requests.exceptions.RequestException as e:
-            print(e)
+        except __requests.exceptions.RequestException:
+            __logging.error(__param.__request_error, exc_info=True)
         except KeyError:
-            return print("İlgili tarih aralığı için veri bulunmamaktadır!")
+            return __pd.DataFrame()
         else:
             return df_hacim
 
@@ -145,7 +144,7 @@ def islem_hacmi(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
     -----------------
     Arz/Talep İşlem Hacmi (₺)
     """
-    while __dogrulama.baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+    while __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
             resp = __requests.get(__transparency_url + "intra-day-income" +
                                   "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi,
@@ -157,10 +156,10 @@ def islem_hacmi(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
             df_hacim.drop("date", axis=1, inplace=True)
             df_hacim.rename(index=str, columns={"income": "İşlem Hacmi"}, inplace=True)
             df_hacim = df_hacim[["Tarih", "Saat", "İşlem Hacmi"]]
-        except __requests.exceptions.RequestException as e:
-            print(e)
+        except __requests.exceptions.RequestException:
+            __logging.error(__param.__request_error, exc_info=True)
         except KeyError:
-            return print("İlgili tarih aralığı için veri bulunmamaktadır!")
+            return __pd.DataFrame()
         else:
             return df_hacim
 
@@ -179,7 +178,7 @@ def islem_akisi(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
     -----------------
     İşlem Akışları (Tarih, Saat, Id, Kontrat Adı, Fiyat, Miktar)
     """
-    while __dogrulama.baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+    while __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
             resp = __requests.get(__transparency_url + "intra-day-trade-history" +
                                   "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi,
@@ -193,10 +192,10 @@ def islem_akisi(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                            columns={"id": "Id", "conract": "Kontrat Adı", "price": "Fiyat", "quantity": "Miktar"},
                            inplace=True)
             df_akis = df_akis[["Tarih", "Saat", "Id", "Kontrat Adı", "Fiyat", "Miktar"]]
-        except __requests.exceptions.RequestException as e:
-            print(e)
+        except __requests.exceptions.RequestException:
+            __logging.error(__param.__request_error, exc_info=True)
         except KeyError:
-            return print("İlgili tarih aralığı için veri bulunmamaktadır!")
+            return __pd.DataFrame()
         else:
             return df_akis
 
@@ -216,7 +215,7 @@ def teklif_edilen_miktarlar(baslangic_tarihi=__dt.datetime.today().strftime("%Y-
     -----------------
     Teklif Edilen Saatlik/Blok Alış/Satış Miktarları
     """
-    if __dogrulama.baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
             resp = __requests.get(
                 __transparency_url + "intra-day-quantity" + "?startDate=" + baslangic_tarihi + "&endDate=" +
@@ -233,10 +232,10 @@ def teklif_edilen_miktarlar(baslangic_tarihi=__dt.datetime.today().strftime("%Y-
                           inplace=True)
             df_tem = df_tem[["Tarih", "Saat", "Saatlik Alış Miktarı", "Blok Alış Miktarı",
                              "Saatlik Satış Miktarı", "Blok Satış Miktarı"]]
-        except __requests.exceptions.RequestException as e:
-            print(e)
+        except __requests.exceptions.RequestException:
+            __logging.error(__param.__request_error, exc_info=True)
         except KeyError:
-            return print("İlgili tarih aralığı için veri bulunmamaktadır!")
+            return __pd.DataFrame()
         else:
             return df_tem
 
@@ -257,7 +256,7 @@ def min_max_fiyatlar(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d")
     -----------------
     Teklif Edilen ve Eşleşen Tekliferin Min./Max. Fiyat Değerleri (₺/MWh)
     """
-    if __dogrulama.baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
             resp = __requests.get(
                 __transparency_url + "intra-day-min-max-price" + "?startDate=" + baslangic_tarihi +
@@ -274,9 +273,9 @@ def min_max_fiyatlar(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d")
                             inplace=True)
             df_fiyat = df_fiyat[["Tarih", "Saat", "Min. Alış Fiyatı", "Max. Alış Fiyatı", "Min. Satış Fiyatı",
                                  "Max. Satış Fiyatı", "Min. Eşleşme Fiyatı", "Max. Eşleşme Fiyatı"]]
-        except __requests.exceptions.RequestException as e:
-            print(e)
+        except __requests.exceptions.RequestException:
+            __logging.error(__param.__request_error, exc_info=True)
         except KeyError:
-            return print("İlgili tarih aralığı için veri bulunmamaktadır!")
+            return __pd.DataFrame()
         else:
             return df_fiyat

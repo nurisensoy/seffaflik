@@ -4,13 +4,11 @@ import datetime as __dt
 from multiprocessing import Pool as __Pool
 import multiprocessing as __mp
 from functools import reduce as __red
-from seffaflik.ortak import araclar as __araclar
-from seffaflik.ortak import dogrulama as __dogrulama
-from seffaflik.ortak import parametreler as __param
-from seffaflik.ortak import anahtar as __api
-from seffaflik.uretim.uretim import organizasyonlar as __organizasyonlar
+import logging as __logging
 
-__hata = __param.BILINMEYEN_HATA_MESAJI
+from seffaflik.ortak import araclar as __araclar, dogrulama as __dogrulama, parametreler as __param, anahtar as __api
+from seffaflik.elektrik.uretim.uretim import organizasyonlar as __organizasyonlar
+
 __transparency_url = __param.SEFFAFLIK_URL + "market/"
 __headers = __api.HEADERS
 
@@ -29,7 +27,7 @@ def hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
     ------
     Arz/Talep Miktarı (MWh)
     """
-    while __dogrulama.baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+    while __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
             resp = __requests.get(__transparency_url + "bilateral-contract-all" +
                                   "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi,
@@ -43,10 +41,10 @@ def hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                             columns={"quantityBid": "Arz Miktarı", "quantityBidAsk": "Talep Miktarı"},
                             inplace=True)
             df_hacim = df_hacim[["Tarih", "Saat", "Talep Miktarı", "Arz Miktarı"]]
-        except __requests.exceptions.RequestException as e:
-            print(e)
+        except __requests.exceptions.RequestException:
+            __logging.error(__param.__request_error, exc_info=True)
         except KeyError:
-            return print("İlgili tarih aralığı için veri bulunmamaktadır!")
+            return __pd.DataFrame()
         else:
             return df_hacim
 
@@ -70,7 +68,7 @@ def organizasyonel_hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-
     ------
     Arz/Talep Miktarı (MWh)
     """
-    while __dogrulama.baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+    while __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
             resp = __requests.get(__transparency_url + "bilateral-contract-sell" +
                                   "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi + "&eic=" + eic,
@@ -87,10 +85,10 @@ def organizasyonel_hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-
             df_hacim["Tarih"] = __pd.to_datetime(df_hacim["date"].apply(lambda d: d[:10]))
             df_hacim.drop("date", axis=1, inplace=True)
             df_hacim = df_hacim[["Tarih", "Saat", "Talep Miktarı", "Arz Miktarı"]]
-        except __requests.exceptions.RequestException as e:
-            print(e)
+        except __requests.exceptions.RequestException:
+            __logging.error(__param.__request_error, exc_info=True)
         except KeyError:
-            return print("İlgili tarih aralığı ve organizasyon için veri bulunmamaktadır!")
+            return __pd.DataFrame()
         else:
             return df_hacim
 
@@ -109,7 +107,7 @@ def tum_organizasyonlar_hacim(baslangic_tarihi=__dt.datetime.today().strftime("%
     -----------------
     Tüm Organizasyonların net İA Hacim Bilgileri (Tarih, Saat, Hacim)
     """
-    if __dogrulama.baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         list_org_eic = list(__organizasyonlar()["EIC Kodu"])
         org_len = len(list_org_eic)
         list_date_org_eic = list(zip([baslangic_tarihi] * org_len, [bitis_tarihi] * org_len, list_org_eic))
@@ -140,7 +138,7 @@ def __organizasyonel_hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%
     ------
     Net İA Miktarı (MWh)
     """
-    while __dogrulama.baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+    while __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
             resp = __requests.get(__transparency_url + "bilateral-contract-sell" +
                                   "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi + "&eic=" + eic,
@@ -158,8 +156,8 @@ def __organizasyonel_hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%
             df_hacim.drop("date", axis=1, inplace=True)
             df_hacim[eic] = df_hacim["Talep Miktarı"] - df_hacim["Arz Miktarı"]
             df_hacim = df_hacim[["Tarih", "Saat", eic]]
-        except __requests.exceptions.RequestException as e:
-            print(e)
+        except __requests.exceptions.RequestException:
+            __logging.error(__param.__request_error, exc_info=True)
         except KeyError:
             return __pd.DataFrame()
         else:

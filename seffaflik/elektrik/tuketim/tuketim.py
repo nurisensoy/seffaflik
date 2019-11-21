@@ -1,10 +1,10 @@
 import requests as __requests
 import pandas as __pd
 import datetime as __dt
+import logging as __logging
 
 from seffaflik.ortak import dogrulama as __dogrulama, parametreler as __param, anahtar as __api
 
-__hata = __param.BILINMEYEN_HATA_MESAJI
 __transparency_url = __param.SEFFAFLIK_URL + "consumption/"
 __headers = __api.HEADERS
 
@@ -24,7 +24,7 @@ def gerceklesen(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
     Gerçek Zamanlı Tüketim (Tarih, Saat, Tüketim)
 
     """
-    while __dogrulama.baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+    while __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
             resp = __requests.get(
                 __transparency_url + "real-time-consumption" + "?startDate=" + baslangic_tarihi +
@@ -35,10 +35,10 @@ def gerceklesen(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
             df_tuketim["Tarih"] = __pd.to_datetime(df_tuketim["date"].apply(lambda d: d[:10]))
             df_tuketim.rename(index=str, columns={"consumption": "Tüketim"}, inplace=True)
             df_tuketim = df_tuketim[["Tarih", "Saat", "Tüketim"]]
-        except __requests.exceptions.RequestException as e:
-            print(e)
+        except __requests.exceptions.RequestException:
+            __logging.error(__param.__request_error, exc_info=True)
         except KeyError:
-            return print("İlgili tarih için veri bulunmamaktadır!")
+            return __pd.DataFrame()
         else:
             return df_tuketim
 
@@ -58,7 +58,7 @@ def uecm(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
     Uzlaştırmaya Esas Çekiş Miktarı (Tarih, Saat, UEÇM)
 
     """
-    while __dogrulama.baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+    while __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
             resp = __requests.get(
                 __transparency_url + "swv" + "?startDate=" + baslangic_tarihi +
@@ -69,10 +69,10 @@ def uecm(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
             df_uecm["Tarih"] = __pd.to_datetime(df_uecm["date"].apply(lambda d: d[:10]))
             df_uecm.rename(index=str, columns={"swv": "UEÇM"}, inplace=True)
             df_uecm = df_uecm[["Tarih", "Saat", "UEÇM"]]
-        except __requests.exceptions.RequestException as e:
-            print(e)
+        except __requests.exceptions.RequestException:
+            __logging.error(__param.__request_error, exc_info=True)
         except KeyError:
-            return print("İlgili tarih için veri bulunmamaktadır!")
+            return __pd.DataFrame()
         else:
             return df_uecm
 
@@ -91,7 +91,7 @@ def uecm_serbest_tuketici_donemsel(tarih=__dt.datetime.today().strftime("%Y-%m-%
     Serbest Tüketici Uzlaştırmaya Esas Çekiş Miktarı (Tarih, Saat, Tüketim)
 
     """
-    while __dogrulama.tarih_dogrulama(tarih):
+    while __dogrulama.__tarih_dogrulama(tarih):
         try:
             resp = __requests.get(__transparency_url + "swv-v2" + "?period=" + tarih, headers=__headers)
             list_uecm = resp.json()["body"]["swvV2List"]
@@ -100,10 +100,9 @@ def uecm_serbest_tuketici_donemsel(tarih=__dt.datetime.today().strftime("%Y-%m-%
             df_uecm["Tarih"] = __pd.to_datetime(df_uecm["vc_gec_trh"].apply(lambda d: d[:10]))
             df_uecm.rename(index=str, columns={"st": "Serbest Tüketici UEÇM"}, inplace=True)
             df_uecm = df_uecm[["Tarih", "Saat", "Serbest Tüketici UEÇM"]]
-        except __requests.exceptions.RequestException as e:
-            print(e)
+        except __requests.exceptions.RequestException:
+            __logging.error(__param.__request_error, exc_info=True)
         except KeyError:
-            print("İlgili tarih için veri bulunmamaktadır!")
             return __pd.DataFrame()
         else:
             return df_uecm
@@ -124,7 +123,7 @@ def uecm_tedarik(tarih=__dt.datetime.today().strftime("%Y-%m-%d")):
     Tedarik Yükümlülüğü Kapsamındaki Uzlaştırmaya Esas Çekiş Miktarı (Tarih, Saat, UEÇM)
 
     """
-    while __dogrulama.tarih_dogrulama(tarih):
+    while __dogrulama.__tarih_dogrulama(tarih):
         try:
             resp = __requests.get(
                 __transparency_url + "under-supply-liability-consumption" + "?startDate=" + tarih + "&endDate=" + tarih,
@@ -134,10 +133,9 @@ def uecm_tedarik(tarih=__dt.datetime.today().strftime("%Y-%m-%d")):
             df_uecm["Uzlaştırma Dönemi"] = df_uecm["date"].apply(lambda d: d[:7])
             df_uecm.rename(index=str, columns={"swv": "Tedarik Yükümlülüğü Kapsamındaki UEÇM"}, inplace=True)
             df_uecm = df_uecm[["Uzlaştırma Dönemi", "Tedarik Yükümlülüğü Kapsamındaki UEÇM"]]
-        except __requests.exceptions.RequestException as e:
-            print(e)
+        except __requests.exceptions.RequestException:
+            __logging.error(__param.__request_error, exc_info=True)
         except KeyError:
-            print("İlgili tarih için veri bulunmamaktadır!")
             return __pd.DataFrame()
         else:
             return df_uecm
@@ -158,7 +156,7 @@ def tahmin(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
     Yük Tahmin Planı (Tarih, Saat, Tüketim)
 
     """
-    while __dogrulama.baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+    while __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
             resp = __requests.get(
                 __transparency_url + "load-estimation-plan" + "?startDate=" + baslangic_tarihi +
@@ -169,10 +167,10 @@ def tahmin(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
             df_tuketim["Tarih"] = __pd.to_datetime(df_tuketim["date"].apply(lambda d: d[:10]))
             df_tuketim.rename(index=str, columns={"lep": "Tüketim"}, inplace=True)
             df_tuketim = df_tuketim[["Tarih", "Saat", "Tüketim"]]
-        except __requests.exceptions.RequestException as e:
-            print(e)
+        except __requests.exceptions.RequestException:
+            __logging.error(__param.__request_error, exc_info=True)
         except KeyError:
-            return print("İlgili tarih için veri bulunmamaktadır!")
+            return __pd.DataFrame()
         else:
             return df_tuketim
 
@@ -199,10 +197,10 @@ def serbest_tuketici_sayisi():
                          columns={"meterQuantity": "Serbest Tüketici Sayısı", "meterIncreaseRate": "Artış Oranı"},
                          inplace=True)
             df_st = df_st[["Tarih", "Serbest Tüketici Sayısı", "Artış Oranı"]]
-        except __requests.exceptions.RequestException as e:
-            print(e)
+        except __requests.exceptions.RequestException:
+            __logging.error(__param.__request_error, exc_info=True)
         except KeyError:
-            return print("İlgili tarih için veri bulunmamaktadır!")
+            return __pd.DataFrame()
         else:
             return df_st
 
@@ -229,9 +227,9 @@ def dagitim_bolgeleri():
             df_dagitim.rename(index=str,
                               columns={"id": "Id", "name": "Dağıtım Şirket Adı"},
                               inplace=True)
-        except __requests.exceptions.RequestException as e:
-            print(e)
+        except __requests.exceptions.RequestException:
+            __logging.error(__param.__request_error, exc_info=True)
         except KeyError:
-            return print("İlgili tarih için veri bulunmamaktadır!")
+            return __pd.DataFrame()
         else:
             return df_dagitim

@@ -3,7 +3,7 @@ from distutils.core import setup
 setup(
     name='seffaflik',
     packages=['seffaflik'],
-    version='0.0.0',
+    version='v0.0-alpha',
     license='MIT',
     description='seffaflik, seffaflik.epias.com.tr adresinde yayımlanan verilerin kolaylıkla okunmasını sağlamaktadır.',
     author='Dr. Nuri Şensoy',

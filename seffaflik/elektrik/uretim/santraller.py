@@ -55,7 +55,8 @@ def yekdem_santralleri(tarih=__dt.datetime.now().strftime("%Y-%m-%d")):
     """
     if __dogrulama.tarih_dogrulama(tarih):
         try:
-            resp = __requests.get(__transparency_url + "renewable-sm-licensed-power-plant-list?period=" + tarih, headers=__headers)
+            resp = __requests.get(__transparency_url + "renewable-sm-licensed-power-plant-list?period=" + tarih,
+                                  headers=__headers)
             list_santral = resp.json()["body"]["powerPlantList"]
             df_santral = __pd.DataFrame(list_santral)
             df_santral.rename(index=str, columns={"id": "Id", "name": "Adı", "eic": "EIC Kodu",

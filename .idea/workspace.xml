@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="7810ed04-bcc4-4b03-b0f7-5dd931e6157e" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/seffaflik/elektrik/uretim/santraller.py" beforeDir="false" afterPath="$PROJECT_DIR$/seffaflik/elektrik/uretim/santraller.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <list id="2c0f7751-daec-45be-8c60-4015b658c8e3" name="Revert &quot;api_key bug fix&quot;" comment="Revert &quot;api_key bug fix&quot;&#10;&#10;This reverts commit cdb4fcda">
       <change beforePath="$PROJECT_DIR$/seffaflik/ortak/araclar.py" beforeDir="false" afterPath="$PROJECT_DIR$/seffaflik/ortak/araclar.py" afterDir="false" />
@@ -14,7 +14,20 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="FileEditorManager">
-    <leaf />
+    <leaf>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/seffaflik/ortak/araclar.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="323">
+              <caret line="66" column="21" selection-start-line="66" selection-start-column="21" selection-end-line="66" selection-end-column="21" />
+              <folding>
+                <element signature="e#0#17#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -88,6 +101,18 @@
               <item name="seffaflik" type="462c0819:PsiDirectoryNode" />
               <item name="seffaflik" type="462c0819:PsiDirectoryNode" />
             </path>
+            <path>
+              <item name="seffaflik" type="b2602c69:ProjectViewProjectNode" />
+              <item name="seffaflik" type="462c0819:PsiDirectoryNode" />
+              <item name="seffaflik" type="462c0819:PsiDirectoryNode" />
+              <item name="elektrik" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="seffaflik" type="b2602c69:ProjectViewProjectNode" />
+              <item name="seffaflik" type="462c0819:PsiDirectoryNode" />
+              <item name="seffaflik" type="462c0819:PsiDirectoryNode" />
+              <item name="ortak" type="462c0819:PsiDirectoryNode" />
+            </path>
           </expand>
           <select />
         </subPane>
@@ -136,10 +161,18 @@
       <workItem from="1574335210721" duration="575000" />
       <workItem from="1574335913619" duration="2058000" />
     </task>
+    <task id="LOCAL-00001" summary="header is added in santraller.py">
+      <created>1574341672449</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1574341672449</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="3296000" />
+    <option name="totallyTimeSpent" value="3557000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-7" y="-7" width="1933" height="1053" extended-state="6" />
@@ -206,6 +239,10 @@
       </map>
     </option>
   </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="header is added in santraller.py" />
+    <option name="LAST_COMMIT_MESSAGE" value="header is added in santraller.py" />
+  </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/README.md">
       <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
@@ -231,16 +268,6 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/seffaflik/__init__.py">
       <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/seffaflik/ortak/araclar.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="300">
-          <caret line="66" column="51" selection-start-line="66" selection-start-column="51" selection-end-line="66" selection-end-column="51" />
-          <folding>
-            <element signature="e#0#17#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/seffaflik/ortak/anahtar.py">
       <provider selected="true" editor-type-id="text-editor">
@@ -307,6 +334,16 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-17">
           <caret line="2" column="23" selection-start-line="2" selection-start-column="23" selection-end-line="2" selection-end-column="23" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/seffaflik/ortak/araclar.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="323">
+          <caret line="66" column="21" selection-start-line="66" selection-start-column="21" selection-end-line="66" selection-end-column="21" />
+          <folding>
+            <element signature="e#0#17#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

@@ -2,9 +2,7 @@ import requests as __requests
 import pandas as __pd
 import datetime as __dt
 
-from seffaflik.ortak import dogrulama as __dogrulama
-from seffaflik.ortak import parametreler as __param
-from seffaflik.ortak import anahtar as __api
+from seffaflik.ortak import dogrulama as __dogrulama, parametreler as __param, anahtar as __api
 
 __hata = __param.BILINMEYEN_HATA_MESAJI
 __transparency_url = __param.SEFFAFLIK_URL + "consumption/"

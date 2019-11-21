@@ -12,5 +12,3 @@ if __os.path.exists(kimlik_dosyasi):
         kimlik = f.read()
         istemci_taniticisi = __json.loads(kimlik)["istemci_taniticisi"]
         HEADERS["x-ibm-client-id"] = istemci_taniticisi
-
-## 4a08ada0-3f0b-43e9-8928-c7f8d5130a7a

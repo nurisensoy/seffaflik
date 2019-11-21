@@ -9,7 +9,7 @@ from seffaflik.ortak import araclar as __araclar
 from seffaflik.ortak import dogrulama as __dogrulama
 from seffaflik.ortak import parametreler as __param
 from seffaflik.ortak import anahtar as __api
-from seffaflik.uretim.uretim import organizasyonlar as __organizasyonlar
+from seffaflik.elektrik.uretim.uretim import organizasyonlar as __organizasyonlar
 
 __hata = __param.BILINMEYEN_HATA_MESAJI
 __transparency_url = __param.SEFFAFLIK_URL + "market/"

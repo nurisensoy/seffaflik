@@ -1,4 +1,5 @@
 import requests as __requests
+from requests import ConnectionError as __ConnectionError
 import pandas as __pd
 import datetime as __dt
 from multiprocessing import Pool as __Pool
@@ -32,15 +33,18 @@ def ptf(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
             resp = __requests.get(
                 __transparency_url + "day-ahead-mcp" + "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi,
                 headers=__headers)
-            list_ptf = resp.json()["body"]["dayAheadMCPList"]
-            df_ptf = __pd.DataFrame(list_ptf)
+            resp.raise_for_status()
+            df_ptf = __pd.DataFrame(resp.json()["body"]["dayAheadMCPList"])
             df_ptf["Saat"] = df_ptf["date"].apply(lambda h: int(h[11:13]))
             df_ptf["Tarih"] = __pd.to_datetime(df_ptf["date"].apply(lambda d: d[:10]))
-            df_ptf.drop("date", axis=1, inplace=True)
             df_ptf.rename(index=str, columns={"price": "PTF"}, inplace=True)
             df_ptf = df_ptf[["Tarih", "Saat", "PTF"]]
+        except __ConnectionError:
+            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
+        except __requests.exceptions.HTTPError as e:
+            __dogrulama.__check_HTTPError(e.response.status_code)
         except __requests.exceptions.RequestException:
-            __logging.error(__param.__request_error, exc_info=True)
+            __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
             return __pd.DataFrame()
         else:

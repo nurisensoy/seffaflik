@@ -1,6 +1,6 @@
 import datetime as __datetime
 import logging as __logging
-
+from seffaflik.ortak import parametreler as __param
 
 def __baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
     try:
@@ -24,6 +24,11 @@ def __tarih_dogrulama(tarih):
         return False
     else:
         return True
+
+
+def __check_HTTPError(error):
+    if error == 401:
+        __logging.error(__param.__requestsAuthenticationErrorLogging, exc_info=False)
 
 
 def __kgup_girebilen_organizasyon_dogrulama(eic):

@@ -1,29 +1,28 @@
-from distutils.core import setup
+from setuptools import setup, find_packages
+
+with open("README.md", "r") as fh:
+    long_description = fh.read()
 
 setup(
-    name='seffaflik',
-    packages=['seffaflik'],
-    version='v0.0-alpha',
-    license='MIT',
-    description='seffaflik, seffaflik.epias.com.tr adresinde yayımlanan verilerin kolaylıkla okunmasını sağlamaktadır.',
+    name="seffaflik",
+    version="v0.0.1",
     author='Dr. Nuri Şensoy',
     author_email='nurisensoy87@gmail.com',
-    url='https://github.com/nurisensoy/seffaflik',
-    download_url='https://github.com/nurisensoy/seffaflik/archive/v0.0-alpha.tar.gz',
+    description="seffaflik.epias.com.tr",
     keywords=['seffaflik', 'transparency', 'Turkish Electricity Market', "TURKEY"],
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    url='https://github.com/nurisensoy/seffaflik',
+    packages=find_packages(),
     install_requires=[
         'requests',
         'pandas',
         'python-dateutil',
     ],
     classifiers=[
-        'Development Status :: 3 - Alpha',
-        'Intended Audience :: Developers',
-        'Topic :: Software Development :: Build Tools',
-        'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
     ],
+    python_requires='>=3.6',
 )

@@ -14,28 +14,40 @@ EPİAŞ, işlettiği piyasalarda katılımcıların işlemlerini fırsat eşitli
 katılımcıların yapacakları işlemlerde doğru karar verebilmeleri için bir merkezi
 veri ve analiz platformu olan [“Şeffaflık Platformunu”](https://seffaflik.epias.com.tr) işletmektedir.
 
-## Şeffaflık Platformu - Web Servis Hizmeti
 EPİAŞ Şeffaflık Platformundaki hizmet kalitesini artırmak maksadıyla ayrıca
 kullanıcılarına “Web Servis Hizmeti” de sunmaktadır. Talep eden kullanıcılar
 platformda yayımlanan tüm verilere buradan da kolaylıkla ulaşabilmektedir.
-
 Şeffaflık Platformu Web Servis Hizmetini ve dolayısıyla bu kütüphaneyi
-kullanacak kişilerin öncelikle Şeffaflık Platformu Web Servis
+kullanacak kişilerin öncelikle belirtmiş oldukları IP numarası üzerinden Şeffaflık Platformu Web Servis
 Hizmeti ile tüm verilere ulaşabilme iznini almaları geremektedir. Bunun için
 öncelikle kullanıcıların Şeffaflık Platformunda yayımlanan
 [Web Servis Şartnamesini](https://www.epias.com.tr/wp-content/uploads/2016/10/Web-Servis-%C5%9Eartnamesi-1.docx)
 doldurmaları ve "seffaflik@epias.com.tr" mail adresi üzerinden doldurulmuş
 şartnameyi firma ile paylaşmaları gerekmektedir.
 
+## Kurulum
+### Gereksinimler (Requirements)
+seffaflik kütüphanesinin kullanımı için gerekli paketler:
+* pandas
+* requests
+* python-dateutils
+
+### pip aracılığıyla en son sürümü yükleyin
+```
+$ pip install seffaflik
+```
+
+### İstemci Kimliği (Client Id) Oluşturulması
 ```python
-from seffaflik.ortak import araclar
-araclar.kimlik_dosyasi_olustur(istemci_taniticisi="abcdefg")
+import seffaflik
+seffaflik.ortak.araclar.kimlik_dosyasi_olustur(istemci_kimligi="abcdefg")
 ```
 Yukarıdaki işlemi gerçekleştirmenizden sonra ana dizininize özel bir
 .seffaflik/.kimlik dosyası yerleştirir. ~/.seffaflik/.kimlik dosyanız aşağıdaki
 gibi görünmelidir:
 ```python
 {
-  "istemci_taniticisi": "abcdefg"
+  "istemci_kimligi": "abcdefg"
 }
 ```
+

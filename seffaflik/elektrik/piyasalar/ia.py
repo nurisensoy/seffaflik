@@ -1,4 +1,6 @@
 import requests as __requests
+from requests import ConnectionError as __ConnectionError
+from requests.exceptions import HTTPError as __HTTPError, RequestException as __RequestException, Timeout as __Timeout
 import pandas as __pd
 import datetime as __dt
 from multiprocessing import Pool as __Pool
@@ -27,22 +29,27 @@ def hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
     ------
     Arz/Talep Miktarı (MWh)
     """
-    while __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
             resp = __requests.get(__transparency_url + "bilateral-contract-all" +
                                   "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi,
-                                  headers=__headers)
+                                  headers=__headers, timeout=__param.__timeout)
             list_hacim = resp.json()["body"]["bilateralContracts"]
             df_hacim = __pd.DataFrame(list_hacim)
             df_hacim["Saat"] = df_hacim["date"].apply(lambda h: int(h[11:13]))
             df_hacim["Tarih"] = __pd.to_datetime(df_hacim["date"].apply(lambda d: d[:10]))
-            df_hacim.drop("date", axis=1, inplace=True)
             df_hacim.rename(index=str,
                             columns={"quantityBid": "Arz Miktarı", "quantityBidAsk": "Talep Miktarı"},
                             inplace=True)
             df_hacim = df_hacim[["Tarih", "Saat", "Talep Miktarı", "Arz Miktarı"]]
-        except __requests.exceptions.RequestException:
-            __logging.error(__param.__request_error, exc_info=True)
+        except __ConnectionError:
+            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
+        except __Timeout:
+            __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
+        except __HTTPError as e:
+            __dogrulama.__check_HTTPError(e.response.status_code)
+        except __RequestException:
+            __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
             return __pd.DataFrame()
         else:
@@ -68,25 +75,30 @@ def organizasyonel_hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-
     ------
     Arz/Talep Miktarı (MWh)
     """
-    while __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
             resp = __requests.get(__transparency_url + "bilateral-contract-sell" +
                                   "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi + "&eic=" + eic,
-                                  headers=__headers)
+                                  headers=__headers, timeout = __param.__timeout)
             list_arz = resp.json()["body"]["bilateralContractSellList"]
             resp = __requests.get(__transparency_url + "bilateral-contract-buy" +
                                   "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi + "&eic=" + eic,
-                                  headers=__headers)
+                                  headers=__headers, timeout = __param.__timeout)
             list_talep = resp.json()["body"]["bilateralContractBuyList"]
             df_arz = __pd.DataFrame(list_arz)
             df_talep = __pd.DataFrame(list_talep)
             df_hacim = __araclar.__merge_ia_dfs_evenif_empty(df_arz, df_talep)
             df_hacim["Saat"] = df_hacim["date"].apply(lambda h: int(h[11:13]))
             df_hacim["Tarih"] = __pd.to_datetime(df_hacim["date"].apply(lambda d: d[:10]))
-            df_hacim.drop("date", axis=1, inplace=True)
             df_hacim = df_hacim[["Tarih", "Saat", "Talep Miktarı", "Arz Miktarı"]]
-        except __requests.exceptions.RequestException:
-            __logging.error(__param.__request_error, exc_info=True)
+        except __ConnectionError:
+            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
+        except __Timeout:
+            __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
+        except __HTTPError as e:
+            __dogrulama.__check_HTTPError(e.response.status_code)
+        except __RequestException:
+            __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
             return __pd.DataFrame()
         else:
@@ -138,26 +150,31 @@ def __organizasyonel_hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%
     ------
     Net İA Miktarı (MWh)
     """
-    while __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
             resp = __requests.get(__transparency_url + "bilateral-contract-sell" +
                                   "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi + "&eic=" + eic,
-                                  headers=__headers)
+                                  headers=__headers, timeout=__param.__timeout)
             list_arz = resp.json()["body"]["bilateralContractSellList"]
             resp = __requests.get(__transparency_url + "bilateral-contract-buy" +
                                   "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi + "&eic=" + eic,
-                                  headers=__headers)
+                                  headers=__headers,timeout=__param.__timeout)
             list_talep = resp.json()["body"]["bilateralContractBuyList"]
             df_arz = __pd.DataFrame(list_arz)
             df_talep = __pd.DataFrame(list_talep)
             df_hacim = __araclar.__merge_ia_dfs_evenif_empty(df_arz, df_talep)
             df_hacim["Saat"] = df_hacim["date"].apply(lambda h: int(h[11:13]))
             df_hacim["Tarih"] = __pd.to_datetime(df_hacim["date"].apply(lambda d: d[:10]))
-            df_hacim.drop("date", axis=1, inplace=True)
             df_hacim[eic] = df_hacim["Talep Miktarı"] - df_hacim["Arz Miktarı"]
             df_hacim = df_hacim[["Tarih", "Saat", eic]]
-        except __requests.exceptions.RequestException:
-            __logging.error(__param.__request_error, exc_info=True)
+        except __ConnectionError:
+            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
+        except __Timeout:
+            __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
+        except __HTTPError as e:
+            __dogrulama.__check_HTTPError(e.response.status_code)
+        except __RequestException:
+            __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
             return __pd.DataFrame()
         else:

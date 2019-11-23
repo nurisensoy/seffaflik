@@ -1,4 +1,6 @@
 import requests as __requests
+from requests import ConnectionError as __ConnectionError
+from requests.exceptions import HTTPError as __HTTPError, RequestException as __RequestException, Timeout as __Timeout
 import pandas as __pd
 import datetime as __dt
 from multiprocessing import Pool as __Pool
@@ -23,26 +25,31 @@ def organizasyonlar():
     -----------------
     KGÜP Girebilen Organizasyon Bilgileri(Id, Adı, EIC Kodu, Kısa Adı, Durum)
     """
-    while True:
-        try:
-            resp = __requests.get(__transparency_url + "dpp-organization", headers=__headers)
-            list_org = resp.json()["body"]["organizations"]
-            df_org = __pd.DataFrame(list_org)
-            df_org.rename(index=str,
-                          columns={"organizationId": "Id", "organizationName": "Adı",
-                                   "organizationETSOCode": "EIC Kodu", "organizationShortName": "Kısa Adı",
-                                   "organizationStatus": "Durum"},
-                          inplace=True)
-            df_org = df_org[["Id", "Adı", "EIC Kodu", "Kısa Adı", "Durum"]]
-        except __requests.exceptions.RequestException:
-            __logging.error(__param.__request_error, exc_info=True)
-        except KeyError:
-            return __pd.DataFrame()
-        else:
-            return df_org
+    try:
+        resp = __requests.get(__transparency_url + "dpp-organization", headers=__headers, timeout=__param.__timeout)
+        list_org = resp.json()["body"]["organizations"]
+        df_org = __pd.DataFrame(list_org)
+        df_org.rename(index=str,
+                      columns={"organizationId": "Id", "organizationName": "Adı",
+                               "organizationETSOCode": "EIC Kodu", "organizationShortName": "Kısa Adı",
+                               "organizationStatus": "Durum"},
+                      inplace=True)
+        df_org = df_org[["Id", "Adı", "EIC Kodu", "Kısa Adı", "Durum"]]
+    except __ConnectionError:
+        __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
+    except __Timeout:
+        __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
+    except __HTTPError as e:
+        __dogrulama.__check_HTTPError(e.response.status_code)
+    except __RequestException:
+        __logging.error(__param.__request_error, exc_info=False)
+    except KeyError:
+        return __pd.DataFrame()
+    else:
+        return df_org
 
 
-def organizasyon_cekis_birimleri(eic):
+def organizasyon_veris_cekis_birimleri(eic):
     """
     İlgili eic değeri için Kesinleşmiş Gün Öncesi Üretim Planı (KGÜP) girebilecek olan organizasyonun uzlaştırmaya
     esas veriş-çekiş birim (UEVÇB) bilgilerini vermektedir.
@@ -56,16 +63,22 @@ def organizasyon_cekis_birimleri(eic):
     KGÜP Girebilen Organizasyonun UEVÇB Bilgileri(Id, Adı, EIC Kodu)
     """
 
-    while __dogrulama.__kgup_girebilen_organizasyon_dogrulama(eic):
+    if __dogrulama.__kgup_girebilen_organizasyon_dogrulama(eic):
         try:
             resp = __requests.get(__transparency_url + "dpp-injection-unit-name?organizationEIC=" + eic,
-                                  headers=__headers)
+                                  headers=__headers, timeout=__param.__timeout)
             list_unit = resp.json()["body"]["injectionUnitNames"]
             df_unit = __pd.DataFrame(list_unit)
             df_unit.rename(index=str, columns={"id": "Id", "name": "Adı", "eic": "EIC Kodu"}, inplace=True)
             df_unit = df_unit[["Id", "Adı", "EIC Kodu"]]
-        except __requests.exceptions.RequestException:
-            __logging.error(__param.__request_error, exc_info=True)
+        except __ConnectionError:
+            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
+        except __Timeout:
+            __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
+        except __HTTPError as e:
+            __dogrulama.__check_HTTPError(e.response.status_code)
+        except __RequestException:
+            __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
             return __pd.DataFrame()
         else:
@@ -86,16 +99,22 @@ def santral_cekis_birimleri(santral_id, tarih=__dt.datetime.today().strftime("%Y
     İlgili  UEVÇB Bilgileri(Id, Adı, EIC Kodu)
     """
 
-    while __dogrulama.__tarih_dogrulama(tarih):
+    if __dogrulama.__tarih_dogrulama(tarih):
         try:
             resp = __requests.get(__transparency_url + "uevcb?period=" + tarih +
-                                  "&powerPlantId=" + santral_id, headers=__headers)
+                                  "&powerPlantId=" + santral_id, headers=__headers, timeout=__param.__timeout)
             list_unit = resp.json()["body"]["uevcbList"]
             df_unit = __pd.DataFrame(list_unit)
             df_unit.rename(index=str, columns={"id": "Id", "name": "Adı", "eic": "EIC Kodu"}, inplace=True)
             df_unit = df_unit[["Id", "Adı", "EIC Kodu"]]
-        except __requests.exceptions.RequestException:
-            __logging.error(__param.__request_error, exc_info=True)
+        except __ConnectionError:
+            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
+        except __Timeout:
+            __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
+        except __HTTPError as e:
+            __dogrulama.__check_HTTPError(e.response.status_code)
+        except __RequestException:
+            __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
             return __pd.DataFrame()
         else:
@@ -141,11 +160,11 @@ def kgup(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
     KGUP (Tarih, Saat, Doğalgaz, Barajlı, Linyit, Akarsu, İthal Kömür, Rüzgar, Fuel Oil, Jeo Termal, Taş Kömür, Biokütle
     ,Nafta, Diğer, Toplam)
     """
-    while __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
             resp = __requests.get(
                 __transparency_url + "dpp" + "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi +
-                "&organizationEIC=" + organizasyon_eic + "&uevcbEIC=" + uevcb_eic, headers=__headers)
+                "&organizationEIC=" + organizasyon_eic + "&uevcbEIC=" + uevcb_eic, headers=__headers, timeout=__param.__timeout)
             list_kgup = resp.json()["body"]["dppList"]
             df_kgup = __pd.DataFrame(list_kgup)
             df_kgup["Saat"] = df_kgup["tarih"].apply(lambda h: int(h[11:13]))
@@ -157,8 +176,14 @@ def kgup(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                                     "ruzgar": "Rüzgar", "tasKomur": "Taş Kömür", "toplam": "Toplam"}, inplace=True)
             df_kgup = df_kgup[["Tarih", "Saat", "Doğalgaz", "Barajlı", "Linyit", "Akarsu", "İthal Kömür", "Rüzgar",
                                "Fuel Oil", "Jeo Termal", "Taş Kömür", "Biokütle", "Nafta", "Diğer", "Toplam"]]
-        except __requests.exceptions.RequestException:
-            __logging.error(__param.__request_error, exc_info=True)
+        except __ConnectionError:
+            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
+        except __Timeout:
+            __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
+        except __HTTPError as e:
+            __dogrulama.__check_HTTPError(e.response.status_code)
+        except __RequestException:
+            __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
             return __pd.DataFrame()
         else:
@@ -215,11 +240,11 @@ def eak(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
     EAK (Tarih, Saat, Doğalgaz, Barajlı, Linyit, Akarsu, İthal Kömür, Rüzgar, Fuel Oil, Jeo Termal, Taş Kömür, Biokütle,
     Nafta, Diğer, Toplam)
     """
-    while __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
             resp = __requests.get(
                 __transparency_url + "aic" + "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi +
-                "&organizationEIC=" + organizasyon_eic + "&uevcbEIC=" + uevcb_eic, headers=__headers)
+                "&organizationEIC=" + organizasyon_eic + "&uevcbEIC=" + uevcb_eic, headers=__headers, timeout=__param.__timeout)
             list_aic = resp.json()["body"]["aicList"]
             df_aic = __pd.DataFrame(list_aic)
             df_aic["Saat"] = df_aic["tarih"].apply(lambda h: int(h[11:13]))
@@ -231,8 +256,14 @@ def eak(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                                    "ruzgar": "Rüzgar", "tasKomur": "Taş Kömür", "toplam": "Toplam"}, inplace=True)
             df_aic = df_aic[["Tarih", "Saat", "Doğalgaz", "Barajlı", "Linyit", "Akarsu", "İthal Kömür", "Rüzgar",
                              "Fuel Oil", "Jeo Termal", "Taş Kömür", "Biokütle", "Nafta", "Diğer", "Toplam"]]
-        except __requests.exceptions.RequestException:
-            __logging.error(__param.__request_error, exc_info=True)
+        except __ConnectionError:
+            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
+        except __Timeout:
+            __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
+        except __HTTPError as e:
+            __dogrulama.__check_HTTPError(e.response.status_code)
+        except __RequestException:
+            __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
             return __pd.DataFrame()
         else:
@@ -290,11 +321,11 @@ def kudup(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
     KUDÜP (Tarih, Saat, Doğalgaz, Barajlı, Linyit, Akarsu, İthal Kömür, Rüzgar, Fuel Oil, Jeo Termal, Taş Kömür,
     Biokütle, Nafta, Diğer, Toplam)
     """
-    while __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
             resp = __requests.get(
                 __transparency_url + "sbfgp" + "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi +
-                "&organizationEIC=" + organizasyon_eic + "&uevcbEIC=" + uevcb_eic, headers=__headers)
+                "&organizationEIC=" + organizasyon_eic + "&uevcbEIC=" + uevcb_eic, headers=__headers, timeout=__param.__timeout)
             list_kgup = resp.json()["body"]["dppList"]
             df_kgup = __pd.DataFrame(list_kgup)
             df_kgup["Saat"] = df_kgup["tarih"].apply(lambda h: int(h[11:13]))
@@ -306,8 +337,14 @@ def kudup(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                                     "ruzgar": "Rüzgar", "tasKomur": "Taş Kömür", "toplam": "Toplam"}, inplace=True)
             df_kgup = df_kgup[["Tarih", "Saat", "Doğalgaz", "Barajlı", "Linyit", "Akarsu", "İthal Kömür", "Rüzgar",
                                "Fuel Oil", "Jeo Termal", "Taş Kömür", "Biokütle", "Nafta", "Diğer", "Toplam"]]
-        except __requests.exceptions.RequestException:
-            __logging.error(__param.__request_error, exc_info=True)
+        except __ConnectionError:
+            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
+        except __Timeout:
+            __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
+        except __HTTPError as e:
+            __dogrulama.__check_HTTPError(e.response.status_code)
+        except __RequestException:
+            __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
             return __pd.DataFrame()
         else:
@@ -328,11 +365,11 @@ def gerceklesen(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
     -----------------
     Gerçek Zamanlı Üretim(Id, Adı, EIC Kodu, Kısa Adı)
     """
-    while __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
             resp = __requests.get(
                 __transparency_url + "real-time-generation" + "?startDate=" + baslangic_tarihi + "&endDate="
-                + bitis_tarihi, headers=__headers)
+                + bitis_tarihi, headers=__headers, timeout=__param.__timeout)
             list_uretim = resp.json()["body"]["hourlyGenerations"]
             df_uretim = __pd.DataFrame(list_uretim)
             df_uretim["Saat"] = df_uretim["date"].apply(lambda h: int(h[11:13]))
@@ -348,8 +385,14 @@ def gerceklesen(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                 ["Tarih", "Saat", "Doğalgaz", "Barajlı", "Linyit", "Akarsu", "İthal Kömür", "Rüzgar", "Güneş",
                  "Fuel Oil", "Jeo Termal", "Asfaltit Kömür", "Taş Kömür", "Biokütle", "Nafta", "LNG", "Uluslararası",
                  "Toplam"]]
-        except __requests.exceptions.RequestException:
-            __logging.error(__param.__request_error, exc_info=True)
+        except __ConnectionError:
+            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
+        except __Timeout:
+            __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
+        except __HTTPError as e:
+            __dogrulama.__check_HTTPError(e.response.status_code)
+        except __RequestException:
+            __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
             return __pd.DataFrame()
         else:
@@ -371,10 +414,10 @@ def __organizasyon_cekis_birimleri(eic):
     UEVÇB EIC Kodu)
     """
 
-    while __dogrulama.__kgup_girebilen_organizasyon_dogrulama(eic):
+    if __dogrulama.__kgup_girebilen_organizasyon_dogrulama(eic):
         try:
             resp = __requests.get(__transparency_url + "dpp-injection-unit-name?organizationEIC=" + eic,
-                                  headers=__headers)
+                                  headers=__headers, timeout=__param.__timeout)
             list_unit = resp.json()["body"]["injectionUnitNames"]
             df_unit = __pd.DataFrame(list_unit)
             df_org = organizasyonlar()
@@ -389,8 +432,14 @@ def __organizasyon_cekis_birimleri(eic):
                            inplace=True)
             df_unit = df_unit[["Org Id", "Org Adı", "Org EIC Kodu", "Org Kısa Adı",
                                "Org Durum", "UEVÇB Id", "UEVÇB Adı", "UEVÇB EIC Kodu"]]
-        except __requests.exceptions.RequestException:
-            __logging.error(__param.__request_error, exc_info=True)
+        except __ConnectionError:
+            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
+        except __Timeout:
+            __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
+        except __HTTPError as e:
+            __dogrulama.__check_HTTPError(e.response.status_code)
+        except __RequestException:
+            __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
             return __pd.DataFrame()
         else:
@@ -411,19 +460,25 @@ def __kgup(baslangic_tarihi, bitis_tarihi, organizasyon_eic):
     -----------------
     Tum organizasyon KGUP değerleri
     """
-    while __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
             resp = __requests.get(
                 __transparency_url + "dpp" + "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi +
-                "&organizationEIC=" + organizasyon_eic, headers=__headers)
+                "&organizationEIC=" + organizasyon_eic, headers=__headers, timeout=__param.__timeout)
             list_kgup = resp.json()["body"]["dppList"]
             df_kgup = __pd.DataFrame(list_kgup)
             df_kgup["Saat"] = df_kgup["tarih"].apply(lambda h: int(h[11:13]))
             df_kgup["Tarih"] = __pd.to_datetime(df_kgup["tarih"].apply(lambda d: d[:10]))
             df_kgup.rename(index=str, columns={"toplam": organizasyon_eic}, inplace=True)
             df_kgup = df_kgup[["Tarih", "Saat", organizasyon_eic]]
-        except __requests.exceptions.RequestException:
-            __logging.error(__param.__request_error, exc_info=True)
+        except __ConnectionError:
+            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
+        except __Timeout:
+            __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
+        except __HTTPError as e:
+            __dogrulama.__check_HTTPError(e.response.status_code)
+        except __RequestException:
+            __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
             return __pd.DataFrame()
         else:
@@ -445,19 +500,25 @@ def __eak(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
     -----------------
     Tum organizasyon EAK değerleri
     """
-    while __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
             resp = __requests.get(
                 __transparency_url + "aic" + "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi +
-                "&organizationEIC=" + organizasyon_eic, headers=__headers)
+                "&organizationEIC=" + organizasyon_eic, headers=__headers, timeout=__param.__timeout)
             list_aic = resp.json()["body"]["aicList"]
             df_aic = __pd.DataFrame(list_aic)
             df_aic["Saat"] = df_aic["tarih"].apply(lambda h: int(h[11:13]))
             df_aic["Tarih"] = __pd.to_datetime(df_aic["tarih"].apply(lambda d: d[:10]))
             df_aic.rename(index=str, columns={"toplam": organizasyon_eic}, inplace=True)
             df_aic = df_aic[["Tarih", "Saat", organizasyon_eic]]
-        except __requests.exceptions.RequestException:
-            __logging.error(__param.__request_error, exc_info=True)
+        except __ConnectionError:
+            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
+        except __Timeout:
+            __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
+        except __HTTPError as e:
+            __dogrulama.__check_HTTPError(e.response.status_code)
+        except __RequestException:
+            __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
             return __pd.DataFrame()
         else:

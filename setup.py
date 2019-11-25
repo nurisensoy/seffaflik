@@ -1,13 +1,18 @@
 from setuptools import setup, find_packages
 
+with open("README.md", encoding="utf-8") as f:
+    long_description = f.read()
+
 setup(
     name="seffaflik",
-    version="v0.0.1",
+    version="v0.0.2",
     author='Dr. Nuri Şensoy',
-    author_email='nurisensoy87@gmail.com',
-    description="seffaflik.epias.com.tr",
-    keywords=['seffaflik', 'transparency', 'Turkish Electricity Market', "TURKEY"],
+    author_email='nuri.sensoy@epias.com.tr',
+    description="EPİAŞ tarafından Şeffaflık Platformunda yayımlanmakta olan verileri çekmek için tasarlanmış Python "
+                "kütüphanesi",
+    long_description=long_description,
     long_description_content_type="text/markdown",
+    keywords=['seffaflik', 'transparency', 'Turkish Electricity Market'],
     url='https://github.com/nurisensoy/seffaflik',
     packages=find_packages(),
     install_requires=[

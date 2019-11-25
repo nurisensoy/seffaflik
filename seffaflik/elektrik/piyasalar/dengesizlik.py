@@ -28,8 +28,8 @@ def dengesizlik_miktari(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%
     if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
             resp = __requests.get(
-                __transparency_url + "imbalance-quantity" + "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi,
-                headers=__headers, timeout=__param.__timeout)
+                __transparency_url + "imbalance-quantity" + "?startDate=" + baslangic_tarihi + "&endDate=" +
+                bitis_tarihi, headers=__headers, timeout=__param.__timeout)
             resp.raise_for_status()
             list_dengesizlik = resp.json()["body"]["imbalanceQuantityList"]
             df_dengesizlik = __pd.DataFrame(list_dengesizlik)
@@ -45,7 +45,7 @@ def dengesizlik_miktari(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%
         except __Timeout:
             __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
         except __HTTPError as e:
-            __dogrulama.__check_HTTPError(e.response.status_code)
+            __dogrulama.__check_http_error(e.response.status_code)
         except __RequestException:
             __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
@@ -88,7 +88,7 @@ def dengesizlik_tutari(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d
         except __Timeout:
             __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
         except __HTTPError as e:
-            __dogrulama.__check_HTTPError(e.response.status_code)
+            __dogrulama.__check_http_error(e.response.status_code)
         except __RequestException:
             __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
@@ -114,8 +114,8 @@ def dengesizlik_miktari_tutari(baslangic_tarihi=__dt.datetime.today().strftime("
     if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
             resp = __requests.get(
-                __transparency_url + "energy-imbalance-hourly" + "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi,
-                headers=__headers, timeout=__param.__timeout)
+                __transparency_url + "energy-imbalance-hourly" + "?startDate=" + baslangic_tarihi + "&endDate=" +
+                bitis_tarihi, headers=__headers, timeout=__param.__timeout)
             resp.raise_for_status()
             list_dengesizlik = resp.json()["body"]["energyImbalances"]
             df_dengesizlik = __pd.DataFrame(list_dengesizlik)
@@ -135,7 +135,7 @@ def dengesizlik_miktari_tutari(baslangic_tarihi=__dt.datetime.today().strftime("
         except __Timeout:
             __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
         except __HTTPError as e:
-            __dogrulama.__check_HTTPError(e.response.status_code)
+            __dogrulama.__check_http_error(e.response.status_code)
         except __RequestException:
             __logging.error(__param.__request_error, exc_info=False)
         except KeyError:

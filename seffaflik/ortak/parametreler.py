@@ -7,3 +7,10 @@ __requestsAuthenticationErrorLogging = "Kimlik dosyası oluşturulmamış yada g
 __requestsTimeoutErrorLogging = "İstek zaman aşımına uğradı! Web-Servis şartnamesinde belirtmiş olduğunuz IP adresini kullandığınızdan emin olunuz!"
 ##Requests timeout
 __timeout = 10
+##
+translations = {
+    "saatlik": "HOURLY",
+    "günlük": "DAILY",
+    "aylik": "MONTHLY",
+    "yillik": "YEAR"
+}

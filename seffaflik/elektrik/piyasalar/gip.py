@@ -29,7 +29,8 @@ def aof(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
         try:
             resp = __requests.get(
                 __transparency_url + "intra-day-aof" + "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi,
-                headers=__headers, timeout = __param.__timeout)
+                headers=__headers, timeout=__param.__timeout)
+            resp.raise_for_status()
             list_aof = resp.json()["body"]["idmAofList"]
             df_aof = __pd.DataFrame(list_aof)
             df_aof["Saat"] = df_aof["date"].apply(lambda h: int(h[11:13]))
@@ -41,7 +42,7 @@ def aof(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
         except __Timeout:
             __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
         except __HTTPError as e:
-            __dogrulama.__check_HTTPError(e.response.status_code)
+            __dogrulama.__check_http_error(e.response.status_code)
         except __RequestException:
             __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
@@ -70,6 +71,7 @@ def ozet(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
             resp = __requests.get(__transparency_url + "intra-day-summary" +
                                   "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi,
                                   headers=__headers, timeout=__param.__timeout)
+            resp.raise_for_status()
             list_ozet = resp.json()["body"]["intraDaySummaryList"]
             df_ozet = __pd.DataFrame(list_ozet)
             df_ozet["Saat"] = df_ozet["date"].apply(lambda h: int(h[11:13]))
@@ -94,7 +96,7 @@ def ozet(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
         except __Timeout:
             __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
         except __HTTPError as e:
-            __dogrulama.__check_HTTPError(e.response.status_code)
+            __dogrulama.__check_http_error(e.response.status_code)
         except __RequestException:
             __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
@@ -103,7 +105,7 @@ def ozet(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
             return df_ozet
 
 
-def eslesme_miktari(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
+def hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                     bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d")):
     """
     İlgili tarih aralığı için gün içi piyasası (GİP) hacim bilgilerini vermektedir.
@@ -122,6 +124,7 @@ def eslesme_miktari(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
             resp = __requests.get(__transparency_url + "intra-day-volume" +
                                   "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi,
                                   headers=__headers, timeout=__param.__timeout)
+            resp.raise_for_status()
             list_hacim = resp.json()["body"]["matchDetails"]
             df_hacim = __pd.DataFrame(list_hacim)
             df_hacim["Saat"] = df_hacim["date"].apply(lambda h: int(h[11:13]))
@@ -138,7 +141,7 @@ def eslesme_miktari(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
         except __Timeout:
             __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
         except __HTTPError as e:
-            __dogrulama.__check_HTTPError(e.response.status_code)
+            __dogrulama.__check_http_error(e.response.status_code)
         except __RequestException:
             __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
@@ -165,7 +168,8 @@ def islem_hacmi(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
         try:
             resp = __requests.get(__transparency_url + "intra-day-income" +
                                   "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi,
-                                  headers=__headers, timeout = __param.__timeout)
+                                  headers=__headers, timeout=__param.__timeout)
+            resp.raise_for_status()
             list_hacim = resp.json()["body"]["incomes"]
             df_hacim = __pd.DataFrame(list_hacim)
             df_hacim["Saat"] = df_hacim["date"].apply(lambda h: int(h[11:13]))
@@ -177,7 +181,7 @@ def islem_hacmi(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
         except __Timeout:
             __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
         except __HTTPError as e:
-            __dogrulama.__check_HTTPError(e.response.status_code)
+            __dogrulama.__check_http_error(e.response.status_code)
         except __RequestException:
             __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
@@ -205,6 +209,7 @@ def islem_akisi(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
             resp = __requests.get(__transparency_url + "intra-day-trade-history" +
                                   "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi,
                                   headers=__headers, timeout=__param.__timeout)
+            resp.raise_for_status()
             list_akis = resp.json()["body"]["intraDayTradeHistoryList"]
             df_akis = __pd.DataFrame(list_akis)
             df_akis["Saat"] = __pd.to_timedelta(df_akis["date"].apply(lambda d: d[11:18]))
@@ -218,7 +223,7 @@ def islem_akisi(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
         except __Timeout:
             __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
         except __HTTPError as e:
-            __dogrulama.__check_HTTPError(e.response.status_code)
+            __dogrulama.__check_http_error(e.response.status_code)
         except __RequestException:
             __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
@@ -246,7 +251,8 @@ def teklif_edilen_miktarlar(baslangic_tarihi=__dt.datetime.today().strftime("%Y-
         try:
             resp = __requests.get(
                 __transparency_url + "intra-day-quantity" + "?startDate=" + baslangic_tarihi + "&endDate=" +
-                bitis_tarihi, headers=__headers, timeout = __param.__timeout)
+                bitis_tarihi, headers=__headers, timeout=__param.__timeout)
+            resp.raise_for_status()
             list_tem = resp.json()["body"]["offerQuantities"]
             df_tem = __pd.DataFrame(list_tem)
             df_tem["Saat"] = df_tem["effectiveDate"].apply(lambda h: int(h[11:13]))
@@ -263,7 +269,7 @@ def teklif_edilen_miktarlar(baslangic_tarihi=__dt.datetime.today().strftime("%Y-
         except __Timeout:
             __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
         except __HTTPError as e:
-            __dogrulama.__check_HTTPError(e.response.status_code)
+            __dogrulama.__check_http_error(e.response.status_code)
         except __RequestException:
             __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
@@ -293,6 +299,7 @@ def min_max_fiyatlar(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d")
             resp = __requests.get(
                 __transparency_url + "intra-day-min-max-price" + "?startDate=" + baslangic_tarihi +
                 "&endDate=" + bitis_tarihi + "&offerType=" + teklif_tipi, headers=__headers)
+            resp.raise_for_status()
             list_fiyat = resp.json()["body"]["minMaxPriceList"]
             df_fiyat = __pd.DataFrame(list_fiyat)
             df_fiyat["Saat"] = df_fiyat["date"].apply(lambda h: int(h[11:13]))
@@ -309,7 +316,7 @@ def min_max_fiyatlar(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d")
         except __Timeout:
             __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
         except __HTTPError as e:
-            __dogrulama.__check_HTTPError(e.response.status_code)
+            __dogrulama.__check_http_error(e.response.status_code)
         except __RequestException:
             __logging.error(__param.__request_error, exc_info=False)
         except KeyError:

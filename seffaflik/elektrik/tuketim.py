@@ -31,6 +31,7 @@ def gerceklesen(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
             resp = __requests.get(
                 __transparency_url + "real-time-consumption" + "?startDate=" + baslangic_tarihi +
                 "&endDate=" + bitis_tarihi, headers=__headers, timeout=__param.__timeout)
+            resp.raise_for_status()
             list_tuketim = resp.json()["body"]["hourlyConsumptions"]
             df_tuketim = __pd.DataFrame(list_tuketim)
             df_tuketim["Saat"] = df_tuketim["date"].apply(lambda h: int(h[11:13]))
@@ -42,7 +43,7 @@ def gerceklesen(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
         except __Timeout:
             __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
         except __HTTPError as e:
-            __dogrulama.__check_HTTPError(e.response.status_code)
+            __dogrulama.__check_http_error(e.response.status_code)
         except __RequestException:
             __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
@@ -71,6 +72,7 @@ def uecm(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
             resp = __requests.get(
                 __transparency_url + "swv" + "?startDate=" + baslangic_tarihi +
                 "&endDate=" + bitis_tarihi, headers=__headers, timeout=__param.__timeout)
+            resp.raise_for_status()
             list_uecm = resp.json()["body"]["swvList"]
             df_uecm = __pd.DataFrame(list_uecm)
             df_uecm["Saat"] = df_uecm["date"].apply(lambda h: int(h[11:13]))
@@ -82,7 +84,7 @@ def uecm(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
         except __Timeout:
             __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
         except __HTTPError as e:
-            __dogrulama.__check_HTTPError(e.response.status_code)
+            __dogrulama.__check_http_error(e.response.status_code)
         except __RequestException:
             __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
@@ -107,7 +109,9 @@ def uecm_serbest_tuketici(tarih=__dt.datetime.today().strftime("%Y-%m-%d")):
     """
     if __dogrulama.__tarih_dogrulama(tarih):
         try:
-            resp = __requests.get(__transparency_url + "swv-v2" + "?period=" + tarih, headers=__headers, timeout=__param.__timeout)
+            resp = __requests.get(__transparency_url + "swv-v2" + "?period=" + tarih, headers=__headers,
+                                  timeout=__param.__timeout)
+            resp.raise_for_status()
             list_uecm = resp.json()["body"]["swvV2List"]
             df_uecm = __pd.DataFrame(list_uecm)
             df_uecm["Saat"] = df_uecm["vc_gec_trh"].apply(lambda h: int(h[11:13]))
@@ -119,7 +123,7 @@ def uecm_serbest_tuketici(tarih=__dt.datetime.today().strftime("%Y-%m-%d")):
         except __Timeout:
             __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
         except __HTTPError as e:
-            __dogrulama.__check_HTTPError(e.response.status_code)
+            __dogrulama.__check_http_error(e.response.status_code)
         except __RequestException:
             __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
@@ -148,6 +152,7 @@ def uecm_tedarik(tarih=__dt.datetime.today().strftime("%Y-%m-%d")):
             resp = __requests.get(
                 __transparency_url + "under-supply-liability-consumption" + "?startDate=" + tarih + "&endDate=" + tarih,
                 headers=__headers, timeout=__param.__timeout)
+            resp.raise_for_status()
             list_uecm = resp.json()["body"]["swvList"]
             df_uecm = __pd.DataFrame(list_uecm)
             df_uecm["Uzlaştırma Dönemi"] = df_uecm["date"].apply(lambda d: d[:7])
@@ -158,7 +163,7 @@ def uecm_tedarik(tarih=__dt.datetime.today().strftime("%Y-%m-%d")):
         except __Timeout:
             __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
         except __HTTPError as e:
-            __dogrulama.__check_HTTPError(e.response.status_code)
+            __dogrulama.__check_http_error(e.response.status_code)
         except __RequestException:
             __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
@@ -187,6 +192,7 @@ def tahmin(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
             resp = __requests.get(
                 __transparency_url + "load-estimation-plan" + "?startDate=" + baslangic_tarihi +
                 "&endDate=" + bitis_tarihi, headers=__headers, timeout=__param.__timeout)
+            resp.raise_for_status()
             list_tuketim = resp.json()["body"]["loadEstimationPlanList"]
             df_tuketim = __pd.DataFrame(list_tuketim)
             df_tuketim["Saat"] = df_tuketim["date"].apply(lambda h: int(h[11:13]))
@@ -198,7 +204,7 @@ def tahmin(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
         except __Timeout:
             __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
         except __HTTPError as e:
-            __dogrulama.__check_HTTPError(e.response.status_code)
+            __dogrulama.__check_http_error(e.response.status_code)
         except __RequestException:
             __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
@@ -219,7 +225,9 @@ def serbest_tuketici_sayisi():
     Serbest Tüketici Sayısı (Tarih, Serbest Tüketici Sayısı, Artış Oranı)
     """
     try:
-        resp = __requests.get(__transparency_url + "eligible-consumer-quantity", headers=__headers, timeout=__param.__timeout)
+        resp = __requests.get(__transparency_url + "eligible-consumer-quantity", headers=__headers,
+                              timeout=__param.__timeout)
+        resp.raise_for_status()
         list_st = resp.json()["body"]["eligibleConsumerQuantityList"]
         df_st = __pd.DataFrame(list_st)
         df_st["Tarih"] = __pd.to_datetime(df_st["date"].apply(lambda d: d[:10]))
@@ -232,7 +240,7 @@ def serbest_tuketici_sayisi():
     except __Timeout:
         __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
     except __HTTPError as e:
-        __dogrulama.__check_HTTPError(e.response.status_code)
+        __dogrulama.__check_http_error(e.response.status_code)
     except __RequestException:
         __logging.error(__param.__request_error, exc_info=False)
     except KeyError:
@@ -257,6 +265,7 @@ def dagitim_bolgeleri():
         """
     try:
         resp = __requests.get(__transparency_url + "distribution", headers=__headers)
+        resp.raise_for_status()
         list_dagitim = resp.json()["body"]["distributionList"]
         df_dagitim = __pd.DataFrame(list_dagitim)
         df_dagitim.rename(index=str,
@@ -267,7 +276,7 @@ def dagitim_bolgeleri():
     except __Timeout:
         __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
     except __HTTPError as e:
-        __dogrulama.__check_HTTPError(e.response.status_code)
+        __dogrulama.__check_http_error(e.response.status_code)
     except __RequestException:
         __logging.error(__param.__request_error, exc_info=False)
     except KeyError:

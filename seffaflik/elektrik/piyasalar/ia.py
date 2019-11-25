@@ -9,7 +9,7 @@ from functools import reduce as __red
 import logging as __logging
 
 from seffaflik.ortak import araclar as __araclar, dogrulama as __dogrulama, parametreler as __param, anahtar as __api
-from seffaflik.elektrik.uretim.uretim import organizasyonlar as __organizasyonlar
+from seffaflik.elektrik.uretim import organizasyonlar as __organizasyonlar
 
 __transparency_url = __param.SEFFAFLIK_URL + "market/"
 __headers = __api.HEADERS
@@ -27,13 +27,14 @@ def hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
 
     Geri Dönüş Değeri
     ------
-    Arz/Talep Miktarı (MWh)
+    Arz/Talep İkili Anlaşma Miktarları (MWh)
     """
     if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
             resp = __requests.get(__transparency_url + "bilateral-contract-all" +
                                   "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi,
                                   headers=__headers, timeout=__param.__timeout)
+            resp.raise_for_status()
             list_hacim = resp.json()["body"]["bilateralContracts"]
             df_hacim = __pd.DataFrame(list_hacim)
             df_hacim["Saat"] = df_hacim["date"].apply(lambda h: int(h[11:13]))
@@ -47,7 +48,7 @@ def hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
         except __Timeout:
             __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
         except __HTTPError as e:
-            __dogrulama.__check_HTTPError(e.response.status_code)
+            __dogrulama.__check_http_error(e.response.status_code)
         except __RequestException:
             __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
@@ -63,7 +64,8 @@ def organizasyonel_hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-
 
     Önemli Bilgi
     ----------
-    Organizasyon bilgisi girilmediği taktirde toplam piyasa hacmi bilgisi verilmektedir.
+    1) Organizasyon bilgisi girilmediği taktirde toplam piyasa hacmi bilgisi verilmektedir.
+    2) Yanlış eic değeri girildiği taktirde boş dataframe dönmektedir.
 
     Parametreler
     ----------
@@ -73,17 +75,19 @@ def organizasyonel_hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-
 
     Geri Dönüş Değeri
     ------
-    Arz/Talep Miktarı (MWh)
+    Organizasyonel Arz/Talep İkili Anlaşma Miktarları (MWh)
     """
-    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+    if __dogrulama.__baslangic_bitis_tarih_eic_dogrulama(baslangic_tarihi, bitis_tarihi, eic):
         try:
             resp = __requests.get(__transparency_url + "bilateral-contract-sell" +
                                   "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi + "&eic=" + eic,
-                                  headers=__headers, timeout = __param.__timeout)
+                                  headers=__headers, timeout=__param.__timeout)
+            resp.raise_for_status()
             list_arz = resp.json()["body"]["bilateralContractSellList"]
             resp = __requests.get(__transparency_url + "bilateral-contract-buy" +
                                   "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi + "&eic=" + eic,
-                                  headers=__headers, timeout = __param.__timeout)
+                                  headers=__headers, timeout=__param.__timeout)
+            resp.raise_for_status()
             list_talep = resp.json()["body"]["bilateralContractBuyList"]
             df_arz = __pd.DataFrame(list_arz)
             df_talep = __pd.DataFrame(list_talep)
@@ -96,7 +100,7 @@ def organizasyonel_hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-
         except __Timeout:
             __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
         except __HTTPError as e:
-            __dogrulama.__check_HTTPError(e.response.status_code)
+            __dogrulama.__check_http_error(e.response.status_code)
         except __RequestException:
             __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
@@ -150,32 +154,33 @@ def __organizasyonel_hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%
     ------
     Net İA Miktarı (MWh)
     """
-    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
-        try:
-            resp = __requests.get(__transparency_url + "bilateral-contract-sell" +
-                                  "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi + "&eic=" + eic,
-                                  headers=__headers, timeout=__param.__timeout)
-            list_arz = resp.json()["body"]["bilateralContractSellList"]
-            resp = __requests.get(__transparency_url + "bilateral-contract-buy" +
-                                  "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi + "&eic=" + eic,
-                                  headers=__headers,timeout=__param.__timeout)
-            list_talep = resp.json()["body"]["bilateralContractBuyList"]
-            df_arz = __pd.DataFrame(list_arz)
-            df_talep = __pd.DataFrame(list_talep)
-            df_hacim = __araclar.__merge_ia_dfs_evenif_empty(df_arz, df_talep)
-            df_hacim["Saat"] = df_hacim["date"].apply(lambda h: int(h[11:13]))
-            df_hacim["Tarih"] = __pd.to_datetime(df_hacim["date"].apply(lambda d: d[:10]))
-            df_hacim[eic] = df_hacim["Talep Miktarı"] - df_hacim["Arz Miktarı"]
-            df_hacim = df_hacim[["Tarih", "Saat", eic]]
-        except __ConnectionError:
-            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-        except __Timeout:
-            __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-        except __HTTPError as e:
-            __dogrulama.__check_HTTPError(e.response.status_code)
-        except __RequestException:
-            __logging.error(__param.__request_error, exc_info=False)
-        except KeyError:
-            return __pd.DataFrame()
-        else:
-            return df_hacim
+    try:
+        resp = __requests.get(__transparency_url + "bilateral-contract-sell" +
+                              "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi + "&eic=" + eic,
+                              headers=__headers, timeout=__param.__timeout)
+        resp.raise_for_status()
+        list_arz = resp.json()["body"]["bilateralContractSellList"]
+        resp = __requests.get(__transparency_url + "bilateral-contract-buy" +
+                              "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi + "&eic=" + eic,
+                              headers=__headers, timeout=__param.__timeout)
+        resp.raise_for_status()
+        list_talep = resp.json()["body"]["bilateralContractBuyList"]
+        df_arz = __pd.DataFrame(list_arz)
+        df_talep = __pd.DataFrame(list_talep)
+        df_hacim = __araclar.__merge_ia_dfs_evenif_empty(df_arz, df_talep)
+        df_hacim["Saat"] = df_hacim["date"].apply(lambda h: int(h[11:13]))
+        df_hacim["Tarih"] = __pd.to_datetime(df_hacim["date"].apply(lambda d: d[:10]))
+        df_hacim[eic] = df_hacim["Talep Miktarı"] - df_hacim["Arz Miktarı"]
+        df_hacim = df_hacim[["Tarih", "Saat", eic]]
+    except __ConnectionError:
+        __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
+    except __Timeout:
+        __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
+    except __HTTPError as e:
+        __dogrulama.__check_http_error(e.response.status_code)
+    except __RequestException:
+        __logging.error(__param.__request_error, exc_info=False)
+    except KeyError:
+        return __pd.DataFrame()
+    else:
+        return df_hacim

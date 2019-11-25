@@ -29,7 +29,8 @@ def smf(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
         try:
             resp = __requests.get(
                 __transparency_url + "smp" + "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi,
-                headers=__headers, timeout = __param.__timeout)
+                headers=__headers, timeout=__param.__timeout)
+            resp.raise_for_status()
             list_smf = resp.json()["body"]["smpList"]
             df_smf = __pd.DataFrame(list_smf)
             df_smf["Saat"] = df_smf["date"].apply(lambda h: int(h[11:13]))
@@ -43,7 +44,7 @@ def smf(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
         except __Timeout:
             __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
         except __HTTPError as e:
-            __dogrulama.__check_HTTPError(e.response.status_code)
+            __dogrulama.__check_http_error(e.response.status_code)
         except __RequestException:
             __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
@@ -70,7 +71,8 @@ def hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
         try:
             resp = __requests.get(__transparency_url + "bpm-order-summary" +
                                   "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi,
-                                  headers=__headers, timeout = __param.__timeout)
+                                  headers=__headers, timeout=__param.__timeout)
+            resp.raise_for_status()
             list_hacim = resp.json()["body"]["bpmorderSummaryList"]
             df_hacim = __pd.DataFrame(list_hacim)
             df_hacim["Saat"] = df_hacim["date"].apply(lambda h: int(h[11:13]))
@@ -92,7 +94,7 @@ def hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
         except __Timeout:
             __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
         except __HTTPError as e:
-            __dogrulama.__check_HTTPError(e.response.status_code)
+            __dogrulama.__check_http_error(e.response.status_code)
         except __RequestException:
             __logging.error(__param.__request_error, exc_info=False)
         except KeyError:

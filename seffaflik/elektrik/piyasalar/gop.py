@@ -9,7 +9,7 @@ from functools import reduce as __red
 import logging as __logging
 
 from seffaflik.ortak import araclar as __araclar, dogrulama as __dogrulama, parametreler as __param, anahtar as __api
-from seffaflik.elektrik.uretim.uretim import organizasyonlar as __organizasyonlar
+from seffaflik.elektrik.uretim import organizasyonlar as __organizasyonlar
 
 __transparency_url = __param.SEFFAFLIK_URL + "market/"
 __headers = __api.HEADERS
@@ -33,7 +33,7 @@ def ptf(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
         try:
             resp = __requests.get(
                 __transparency_url + "day-ahead-mcp" + "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi,
-                headers=__headers, timeout = __param.__timeout)
+                headers=__headers, timeout=__param.__timeout)
             resp.raise_for_status()
             list_ptf = resp.json()["body"]["dayAheadMCPList"]
             df_ptf = __pd.DataFrame(list_ptf)
@@ -46,7 +46,7 @@ def ptf(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
         except __Timeout:
             __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
         except __HTTPError as e:
-            __dogrulama.__check_HTTPError(e.response.status_code)
+            __dogrulama.__check_http_error(e.response.status_code)
         except __RequestException:
             __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
@@ -77,7 +77,8 @@ def hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
         try:
             resp = __requests.get(__transparency_url + "day-ahead-market-volume" +
                                   "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi,
-                                  headers=__headers, timeout = __param.__timeout)
+                                  headers=__headers, timeout=__param.__timeout)
+            resp.raise_for_status()
             list_hacim = resp.json()["body"]["dayAheadMarketVolumeList"]
             df_hacim = __pd.DataFrame(list_hacim)
             df_hacim["Saat"] = df_hacim["date"].apply(lambda h: int(h[11:13]))
@@ -99,7 +100,7 @@ def hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
         except __Timeout:
             __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
         except __HTTPError as e:
-            __dogrulama.__check_HTTPError(e.response.status_code)
+            __dogrulama.__check_http_error(e.response.status_code)
         except __RequestException:
             __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
@@ -111,7 +112,8 @@ def hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
 def organizasyonel_hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                          bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"), eic=""):
     """
-    İlgili tarih aralığı ve eic değeri verilmiş olan organizasyon için gün öncesi piyasası hacim bilgilerini vermektedir.
+    İlgili tarih aralığı ve eic değeri verilmiş olan organizasyon için gün öncesi piyasası hacim bilgilerini
+    vermektedir.
 
     Önemli Bilgi
     ----------
@@ -126,11 +128,12 @@ def organizasyonel_hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-
     -----------------
     Arz/Talep Eşleşme Miktarı (MWh)
     """
-    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+    if __dogrulama.__baslangic_bitis_tarih_eic_dogrulama(baslangic_tarihi, bitis_tarihi, eic):
         try:
             resp = __requests.get(__transparency_url + "day-ahead-market-volume" +
                                   "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi + "&eic=" + eic,
-                                  headers=__headers, timeout = __param.__timeout)
+                                  headers=__headers, timeout=__param.__timeout)
+            resp.raise_for_status()
             list_hacim = resp.json()["body"]["dayAheadMarketVolumeList"]
             df_hacim = __pd.DataFrame(list_hacim)
             df_hacim["Saat"] = df_hacim["date"].apply(lambda h: int(h[11:13]))
@@ -150,7 +153,7 @@ def organizasyonel_hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-
         except __Timeout:
             __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
         except __HTTPError as e:
-            __dogrulama.__check_HTTPError(e.response.status_code)
+            __dogrulama.__check_http_error(e.response.status_code)
         except __RequestException:
             __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
@@ -261,7 +264,9 @@ def arz_talep_egrisi(tarih=__dt.datetime.today().strftime("%Y-%m-%d")):
     """
     if __dogrulama.__tarih_dogrulama(tarih):
         try:
-            resp = __requests.get(__transparency_url + "supply-demand-curve" + "?period=" + tarih, headers=__headers, timeout = __param.__timeout)
+            resp = __requests.get(__transparency_url + "supply-demand-curve" + "?period=" + tarih, headers=__headers,
+                                  timeout=__param.__timeout)
+            resp.raise_for_status()
             list_egri = resp.json()["body"]["supplyDemandCurves"]
             df_egri = __pd.DataFrame(list_egri)
             df_egri["Saat"] = df_egri["date"].apply(lambda x: int(x[11:13]))
@@ -272,7 +277,7 @@ def arz_talep_egrisi(tarih=__dt.datetime.today().strftime("%Y-%m-%d")):
         except __Timeout:
             __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
         except __HTTPError as e:
-            __dogrulama.__check_HTTPError(e.response.status_code)
+            __dogrulama.__check_http_error(e.response.status_code)
         except __RequestException:
             __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
@@ -302,7 +307,8 @@ def islem_hacmi(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
         try:
             resp = __requests.get(__transparency_url + "day-ahead-market-trade-volume" +
                                   "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi,
-                                  headers=__headers, timeout = __param.__timeout)
+                                  headers=__headers, timeout=__param.__timeout)
+            resp.raise_for_status()
             list_hacim = resp.json()["body"]["dayAheadMarketTradeVolumeList"]
             df_hacim = __pd.DataFrame(list_hacim)
             df_hacim["Saat"] = df_hacim["date"].apply(lambda h: int(h[11:13]))
@@ -316,7 +322,7 @@ def islem_hacmi(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
         except __Timeout:
             __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
         except __HTTPError as e:
-            __dogrulama.__check_HTTPError(e.response.status_code)
+            __dogrulama.__check_http_error(e.response.status_code)
         except __RequestException:
             __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
@@ -344,7 +350,8 @@ def blok_miktari(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
         try:
             resp = __requests.get(__transparency_url + "amount-of-block"
                                   + "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi,
-                                  headers=__headers, timeout = __param.__timeout)
+                                  headers=__headers, timeout=__param.__timeout)
+            resp.raise_for_status()
             list_blok = resp.json()["body"]["amountOfBlockList"]
             df_blok = __pd.DataFrame(list_blok)
             df_blok["Saat"] = df_blok["date"].apply(lambda h: int(h[11:13]))
@@ -362,7 +369,7 @@ def blok_miktari(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
         except __Timeout:
             __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
         except __HTTPError as e:
-            __dogrulama.__check_HTTPError(e.response.status_code)
+            __dogrulama.__check_http_error(e.response.status_code)
         except __RequestException:
             __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
@@ -390,7 +397,8 @@ def fark_tutari(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
         try:
             resp = __requests.get(__transparency_url + "day-ahead-diff-funds"
                                   + "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi,
-                                  headers=__headers, timeout = __param.__timeout)
+                                  headers=__headers, timeout=__param.__timeout)
+            resp.raise_for_status()
             list_ft = resp.json()["body"]["diffFundList"]
             df_ft = __pd.DataFrame(list_ft)
             df_ft["date"] = __pd.to_datetime(df_ft["date"].apply(lambda d: d[:10]))
@@ -404,7 +412,7 @@ def fark_tutari(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
         except __Timeout:
             __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
         except __HTTPError as e:
-            __dogrulama.__check_HTTPError(e.response.status_code)
+            __dogrulama.__check_http_error(e.response.status_code)
         except __RequestException:
             __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
@@ -428,7 +436,8 @@ def kptf(tarih=(__dt.datetime.today() + __dt.timedelta(days=1)).strftime("%Y-%m-
     if __dogrulama.__tarih_dogrulama(tarih):
         try:
             resp = __requests.get(__transparency_url + "day-ahead-interim-mcp" + "?period=" + tarih,
-                                  headers=__headers, timeout = __param.__timeout)
+                                  headers=__headers, timeout=__param.__timeout)
+            resp.raise_for_status()
             list_kptf = resp.json()["body"]["interimMCPList"]
             df_kptf = __pd.DataFrame(list_kptf)
             df_kptf["Saat"] = df_kptf["date"].apply(lambda x: int(x[11:13]))
@@ -439,7 +448,7 @@ def kptf(tarih=(__dt.datetime.today() + __dt.timedelta(days=1)).strftime("%Y-%m-
         except __Timeout:
             __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
         except __HTTPError as e:
-            __dogrulama.__check_HTTPError(e.response.status_code)
+            __dogrulama.__check_http_error(e.response.status_code)
         except __RequestException:
             __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
@@ -462,32 +471,32 @@ def __organizasyonel_net_hacim(baslangic_tarihi=__dt.datetime.today().strftime("
     -----------------
     Organizasyonel Net Eşleşme Miktarı (MWh)
     """
-    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
-        try:
-            resp = __requests.get(__transparency_url + "day-ahead-market-volume" +
-                                  "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi + "&eic=" + eic,
-                                  headers=__headers, timeout = __param.__timeout)
-            list_hacim = resp.json()["body"]["dayAheadMarketVolumeList"]
-            df_hacim = __pd.DataFrame(list_hacim)
-            df_hacim["Saat"] = df_hacim["date"].apply(lambda h: int(h[11:13]))
-            df_hacim["Tarih"] = __pd.to_datetime(df_hacim["date"].apply(lambda d: d[:10]))
-            df_hacim.rename(index=str,
-                            columns={"matchedBids": "Talep Eşleşme Miktarı", "matchedOffers": "Arz Eşleşme Miktarı"},
-                            inplace=True)
-            df_hacim[eic] = df_hacim["Talep Eşleşme Miktarı"] - df_hacim["Arz Eşleşme Miktarı"]
-            df_hacim = df_hacim[["Tarih", "Saat", eic]]
-        except __ConnectionError:
-            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-        except __Timeout:
-            __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-        except __HTTPError as e:
-            __dogrulama.__check_HTTPError(e.response.status_code)
-        except __RequestException:
-            __logging.error(__param.__request_error, exc_info=False)
-        except KeyError:
-            return __pd.DataFrame()
-        else:
-            return df_hacim
+    try:
+        resp = __requests.get(__transparency_url + "day-ahead-market-volume" +
+                              "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi + "&eic=" + eic,
+                              headers=__headers, timeout=__param.__timeout)
+        resp.raise_for_status()
+        list_hacim = resp.json()["body"]["dayAheadMarketVolumeList"]
+        df_hacim = __pd.DataFrame(list_hacim)
+        df_hacim["Saat"] = df_hacim["date"].apply(lambda h: int(h[11:13]))
+        df_hacim["Tarih"] = __pd.to_datetime(df_hacim["date"].apply(lambda d: d[:10]))
+        df_hacim.rename(index=str,
+                        columns={"matchedBids": "Talep Eşleşme Miktarı", "matchedOffers": "Arz Eşleşme Miktarı"},
+                        inplace=True)
+        df_hacim[eic] = df_hacim["Talep Eşleşme Miktarı"] - df_hacim["Arz Eşleşme Miktarı"]
+        df_hacim = df_hacim[["Tarih", "Saat", eic]]
+    except __ConnectionError:
+        __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
+    except __Timeout:
+        __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
+    except __HTTPError as e:
+        __dogrulama.__check_http_error(e.response.status_code)
+    except __RequestException:
+        __logging.error(__param.__request_error, exc_info=False)
+    except KeyError:
+        return __pd.DataFrame()
+    else:
+        return df_hacim
 
 
 def __organizasyonel_arz_hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
@@ -504,33 +513,33 @@ def __organizasyonel_arz_hacim(baslangic_tarihi=__dt.datetime.today().strftime("
     -----------------
     ORganizasyonel Arz Eşleşme Miktarı (MWh)
     """
-    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
-        try:
-            resp = __requests.get(__transparency_url + "day-ahead-market-volume" +
-                                  "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi + "&eic=" + eic,
-                                  headers=__headers, timeout = __param.__timeout)
-            list_hacim = resp.json()["body"]["dayAheadMarketVolumeList"]
-            df_hacim = __pd.DataFrame(list_hacim)
-            df_hacim["Saat"] = df_hacim["date"].apply(lambda h: int(h[11:13]))
-            df_hacim["Tarih"] = __pd.to_datetime(df_hacim["date"].apply(lambda d: d[:10]))
-            df_hacim.drop("date", axis=1, inplace=True)
-            df_hacim.rename(index=str,
-                            columns={"matchedOffers": "Arz Eşleşme Miktarı"},
-                            inplace=True)
-            df_hacim[eic] = df_hacim["Arz Eşleşme Miktarı"]
-            df_hacim = df_hacim[["Tarih", "Saat", eic]]
-        except __ConnectionError:
-            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-        except __Timeout:
-            __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-        except __HTTPError as e:
-            __dogrulama.__check_HTTPError(e.response.status_code)
-        except __RequestException:
-            __logging.error(__param.__request_error, exc_info=False)
-        except KeyError:
-            return __pd.DataFrame()
-        else:
-            return df_hacim
+    try:
+        resp = __requests.get(__transparency_url + "day-ahead-market-volume" +
+                              "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi + "&eic=" + eic,
+                              headers=__headers, timeout=__param.__timeout)
+        resp.raise_for_status()
+        list_hacim = resp.json()["body"]["dayAheadMarketVolumeList"]
+        df_hacim = __pd.DataFrame(list_hacim)
+        df_hacim["Saat"] = df_hacim["date"].apply(lambda h: int(h[11:13]))
+        df_hacim["Tarih"] = __pd.to_datetime(df_hacim["date"].apply(lambda d: d[:10]))
+        df_hacim.drop("date", axis=1, inplace=True)
+        df_hacim.rename(index=str,
+                        columns={"matchedOffers": "Arz Eşleşme Miktarı"},
+                        inplace=True)
+        df_hacim[eic] = df_hacim["Arz Eşleşme Miktarı"]
+        df_hacim = df_hacim[["Tarih", "Saat", eic]]
+    except __ConnectionError:
+        __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
+    except __Timeout:
+        __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
+    except __HTTPError as e:
+        __dogrulama.__check_http_error(e.response.status_code)
+    except __RequestException:
+        __logging.error(__param.__request_error, exc_info=False)
+    except KeyError:
+        return __pd.DataFrame()
+    else:
+        return df_hacim
 
 
 def __organizasyonel_talep_hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
@@ -547,29 +556,29 @@ def __organizasyonel_talep_hacim(baslangic_tarihi=__dt.datetime.today().strftime
     -----------------
     Organizasyonel Talep Eşleşme Miktarı (MWh)
     """
-    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
-        try:
-            resp = __requests.get(__transparency_url + "day-ahead-market-volume" +
-                                  "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi + "&eic=" + eic,
-                                  headers=__headers, timeout = __param.__timeout)
-            list_hacim = resp.json()["body"]["dayAheadMarketVolumeList"]
-            df_hacim = __pd.DataFrame(list_hacim)
-            df_hacim["Saat"] = df_hacim["date"].apply(lambda h: int(h[11:13]))
-            df_hacim["Tarih"] = __pd.to_datetime(df_hacim["date"].apply(lambda d: d[:10]))
-            df_hacim.rename(index=str,
-                            columns={"matchedBids": "Talep Eşleşme Miktarı"},
-                            inplace=True)
-            df_hacim[eic] = df_hacim["Talep Eşleşme Miktarı"]
-            df_hacim = df_hacim[["Tarih", "Saat", eic]]
-        except __ConnectionError:
-            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-        except __Timeout:
-            __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-        except __HTTPError as e:
-            __dogrulama.__check_HTTPError(e.response.status_code)
-        except __RequestException:
-            __logging.error(__param.__request_error, exc_info=False)
-        except KeyError:
-            return __pd.DataFrame()
-        else:
-            return df_hacim
+    try:
+        resp = __requests.get(__transparency_url + "day-ahead-market-volume" +
+                              "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi + "&eic=" + eic,
+                              headers=__headers, timeout=__param.__timeout)
+        resp.raise_for_status()
+        list_hacim = resp.json()["body"]["dayAheadMarketVolumeList"]
+        df_hacim = __pd.DataFrame(list_hacim)
+        df_hacim["Saat"] = df_hacim["date"].apply(lambda h: int(h[11:13]))
+        df_hacim["Tarih"] = __pd.to_datetime(df_hacim["date"].apply(lambda d: d[:10]))
+        df_hacim.rename(index=str,
+                        columns={"matchedBids": "Talep Eşleşme Miktarı"},
+                        inplace=True)
+        df_hacim[eic] = df_hacim["Talep Eşleşme Miktarı"]
+        df_hacim = df_hacim[["Tarih", "Saat", eic]]
+    except __ConnectionError:
+        __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
+    except __Timeout:
+        __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
+    except __HTTPError as e:
+        __dogrulama.__check_http_error(e.response.status_code)
+    except __RequestException:
+        __logging.error(__param.__request_error, exc_info=False)
+    except KeyError:
+        return __pd.DataFrame()
+    else:
+        return df_hacim

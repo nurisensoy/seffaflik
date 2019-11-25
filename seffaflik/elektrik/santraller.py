@@ -28,7 +28,9 @@ def santraller(tarih=__dt.datetime.now().strftime("%Y-%m-%d")):
     """
     if __dogrulama.__tarih_dogrulama(tarih):
         try:
-            resp = __requests.get(__transparency_url + "power-plant?period=" + tarih, headers=__headers, timeout=__param.__timeout)
+            resp = __requests.get(__transparency_url + "power-plant?period=" + tarih, headers=__headers,
+                                  timeout=__param.__timeout)
+            resp.raise_for_status()
             list_santral = resp.json()["body"]["powerPlantList"]
             df_santral = __pd.DataFrame(list_santral)
             df_santral.rename(index=str, columns={"id": "Id", "name": "Adı", "eic": "EIC Kodu",
@@ -39,7 +41,7 @@ def santraller(tarih=__dt.datetime.now().strftime("%Y-%m-%d")):
         except __Timeout:
             __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
         except __HTTPError as e:
-            __dogrulama.__check_HTTPError(e.response.status_code)
+            __dogrulama.__check_http_error(e.response.status_code)
         except __RequestException:
             __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
@@ -64,6 +66,7 @@ def yekdem_santralleri(tarih=__dt.datetime.now().strftime("%Y-%m-%d")):
         try:
             resp = __requests.get(__transparency_url + "renewable-sm-licensed-power-plant-list?period=" + tarih,
                                   headers=__headers, timeout=__param.__timeout)
+            resp.raise_for_status()
             list_santral = resp.json()["body"]["powerPlantList"]
             df_santral = __pd.DataFrame(list_santral)
             df_santral.rename(index=str, columns={"id": "Id", "name": "Adı", "eic": "EIC Kodu",
@@ -74,7 +77,7 @@ def yekdem_santralleri(tarih=__dt.datetime.now().strftime("%Y-%m-%d")):
         except __Timeout:
             __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
         except __HTTPError as e:
-            __dogrulama.__check_HTTPError(e.response.status_code)
+            __dogrulama.__check_http_error(e.response.status_code)
         except __RequestException:
             __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
@@ -103,11 +106,11 @@ def kurulu_guc(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
         son = __dt.datetime.strptime(bitis_tarihi[:7], '%Y-%m')
         date_list = []
         while ilk <= son:
-            date_list.append(ilp = __Pool(__mp.cpu_count())k.strftime("%Y-%m-%d"))
+            date_list.append(ilk.strftime("%Y-%m-%d"))
             ilk = ilk + __rd.relativedelta(months=+1)
         with __Pool(__mp.cpu_count()) as p:
             df_list = p.map(__kurulu_guc, date_list)
-        return __pd.concat(df_list.get(), sort=False)
+        return __pd.concat(df_list, sort=False)
 
 
 def yekdem_kurulu_guc(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
@@ -127,7 +130,7 @@ def yekdem_kurulu_guc(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"
     Kurulu Güç Bilgisi (Tarih, Kurulu Güç)
     """
     if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
-        ilk = __dt.datetime.stp = __Pool(__mp.cpu_count())rptime(baslangic_tarihi[:7], '%Y-%m')
+        ilk = __dt.datetime.strptime(baslangic_tarihi[:7], '%Y-%m')
         son = __dt.datetime.strptime(bitis_tarihi[:7], '%Y-%m')
         date_list = []
         while ilk <= son and ilk <= __dt.datetime.today():
@@ -156,6 +159,7 @@ def ariza_bakim_bildirimleri(baslangic_tarihi=__dt.datetime.today().strftime("%Y
             resp = __requests.get(
                 __transparency_url + "urgent-market-message" + "?startDate=" + baslangic_tarihi +
                 "&endDate=" + bitis_tarihi + "&regionId=" + bolge_id, headers=__headers, timeout=__param.__timeout)
+            resp.raise_for_status()
             list_bildirim = resp.json()["body"]["urgentMarketMessageList"]
             df_bildirim = __pd.DataFrame(list_bildirim)
             df_bildirim["caseAddDate"] = __pd.to_datetime(df_bildirim["caseAddDate"])
@@ -178,7 +182,7 @@ def ariza_bakim_bildirimleri(baslangic_tarihi=__dt.datetime.today().strftime("%Y
         except __Timeout:
             __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
         except __HTTPError as e:
-            __dogrulama.__check_HTTPError(e.response.status_code)
+            __dogrulama.__check_http_error(e.response.status_code)
         except __RequestException:
             __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
@@ -200,22 +204,21 @@ def __kurulu_guc(tarih):
     Kurulu Güç Bilgisi (Tarih, Kurulu Güç)
     """
     try:
-        resp = __requests.get(__transparency_url + "installed-capacity?period=" + tarih, headers=__headers, timeout=__param.__timeout)
+        resp = __requests.get(__transparency_url + "installed-capacity?period=" + tarih, headers=__headers,
+                              timeout=__param.__timeout)
+        resp.raise_for_status()
         list_guc = resp.json()["body"]["installedCapacityList"]
         df_guc = __pd.DataFrame(list_guc)
         df_guc = df_guc[df_guc["capacityType"] == "ALL"]
         df_guc.insert(loc=0, column="Tarih", value=__pd.to_datetime(tarih))
         df_guc.rename(index=str, columns={"capacity": "Kurulu Güç"}, inplace=True)
-        df_gexcept __requests.exceptions.RequestException:
-        __logging.error(__param.__request_error, exc_info=True)
-    except KeyError:
-        return __pd.DataFrame()uc = df_guc[["Tarih", "Kurulu Güç"]]
+        df_guc = df_guc[["Tarih", "Kurulu Güç"]]
     except __ConnectionError:
         __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
     except __Timeout:
         __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
     except __HTTPError as e:
-        __dogrulama.__check_HTTPError(e.response.status_code)
+        __dogrulama.__check_http_error(e.response.status_code)
     except __RequestException:
         __logging.error(__param.__request_error, exc_info=False)
     except KeyError:
@@ -238,7 +241,9 @@ def __yekdem_kurulu_guc(tarih):
     Kurulu Güç Bilgisi (Tarih, Kurulu Güç)
     """
     try:
-        resp = __requests.get(__transparency_url + "installed-capacity-of-renewable?period=" + tarih, headers=__headers, timeout=__param.__timeout)
+        resp = __requests.get(__transparency_url + "installed-capacity-of-renewable?period=" + tarih, headers=__headers,
+                              timeout=__param.__timeout)
+        resp.raise_for_status()
         list_guc = resp.json()["body"]["installedCapacityOfRenewableList"]
         df_guc = __pd.DataFrame(list_guc)
         columns = df_guc["capacityType"].values
@@ -251,7 +256,7 @@ def __yekdem_kurulu_guc(tarih):
     except __Timeout:
         __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
     except __HTTPError as e:
-        __dogrulama.__check_HTTPError(e.response.status_code)
+        __dogrulama.__check_http_error(e.response.status_code)
     except __RequestException:
         __logging.error(__param.__request_error, exc_info=False)
     except KeyError:

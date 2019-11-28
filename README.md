@@ -31,16 +31,15 @@ seffaflik kütüphanesinin kullanımı için gerekli paketler:
 * pandas
 * requests
 * python-dateutils
-
 ### pip aracılığıyla en son sürümü yükleyin
 ```
 $ pip install seffaflik
 ```
 
-### İstemci Kimliği (Client Id) Oluşturulması
+### Kimlik (Client Id) Oluşturulması
 ```python
 import seffaflik
-seffaflik.ortak.araclar.kimlik_dosyasi_olustur(istemci_kimligi="abcdefg")
+seffaflik.ortak.anahtar.kimlik_dosyasi_olustur(istemci_kimligi="abcdefg")
 ```
 Yukarıdaki işlemi gerçekleştirmenizden sonra ana dizininize özel bir
 .seffaflik/.kimlik dosyası yerleştirir. ~/.seffaflik/.kimlik dosyanız aşağıdaki

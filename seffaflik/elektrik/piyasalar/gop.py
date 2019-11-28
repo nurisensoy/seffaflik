@@ -8,7 +8,7 @@ import multiprocessing as __mp
 from functools import reduce as __red
 import logging as __logging
 
-from seffaflik.ortak import araclar as __araclar, dogrulama as __dogrulama, parametreler as __param, anahtar as __api
+from seffaflik.ortak import dogrulama as __dogrulama, parametreler as __param, anahtar as __api
 from seffaflik.elektrik.uretim import organizasyonlar as __organizasyonlar
 
 __transparency_url = __param.SEFFAFLIK_URL + "market/"
@@ -18,7 +18,7 @@ __headers = __api.HEADERS
 def ptf(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
         bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d")):
     """
-    İlgili tarih aralığı için saatlik piyasa takas fiyatlarını (PTF) vermektedir.
+    İlgili tarih aralığı için saatlik gün öncesi piyasası (GÖP) piyasa takas fiyatlarını (PTF) vermektedir.
 
     Parametreler
     ------------
@@ -27,7 +27,7 @@ def ptf(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
 
     Geri Dönüş Değeri
     -----------------
-    Piyasa Takas Fiyatı (₺/MWh)
+    Saatlik PTF (₺/MWh)
     """
     if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
@@ -56,83 +56,30 @@ def ptf(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
 
 
 def hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
-          bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d")):
+          bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"), organizasyon_eic=""):
     """
-        İlgili tarih aralığı için gün öncesi piyasası hacim bilgilerini vermektedir.
-
-        Önemli Bilgi
-        -----------
-        Organizasyon bilgisi girilmediği taktirde tüm piyasa hacmi bilgisi verilmektedir.
-
-        Parametreler
-        ------------
-        baslangic_tarihi: %YYYY-%AA-%GG formatında başlangıç tarihi (Varsayılan: bugün)
-        bitis_tarihi    : %YYYY-%AA-%GG formatında bitiş tarihi (Varsayılan: bugün)
-
-        Geri Dönüş Değeri
-        -----------------
-        Arz/Talep Eşleşme Miktarı (MWh)
-    """
-    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
-        try:
-            resp = __requests.get(__transparency_url + "day-ahead-market-volume" +
-                                  "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi,
-                                  headers=__headers, timeout=__param.__timeout)
-            resp.raise_for_status()
-            list_hacim = resp.json()["body"]["dayAheadMarketVolumeList"]
-            df_hacim = __pd.DataFrame(list_hacim)
-            df_hacim["Saat"] = df_hacim["date"].apply(lambda h: int(h[11:13]))
-            df_hacim["Tarih"] = __pd.to_datetime(df_hacim["date"].apply(lambda d: d[:10]))
-            df_hacim.rename(index=str,
-                            columns={"matchedBids": "Talep Eşleşme Miktarı", "matchedOffers": "Arz Eşleşme Miktarı",
-                                     "volume": "Eşleşme Miktarı", "blockBid": "Arz Blok Teklif Eşleşme Miktarı",
-                                     "blockOffer": "Talep Blok Teklif Eşleşme Miktarı",
-                                     "priceIndependentBid": "Fiyattan Bağımsız Talep Miktarı",
-                                     "priceIndependentOffer": "Fiyattan Bağımsız Arz Miktarı",
-                                     "quantityOfAsk": "Maksimum Talep Miktarı",
-                                     "quantityOfBid": "Maksimum Arz Miktarı"},
-                            inplace=True)
-            df_hacim = df_hacim[["Tarih", "Saat", "Talep Eşleşme Miktarı", "Eşleşme Miktarı", "Arz Eşleşme Miktarı",
-                                 "Fiyattan Bağımsız Talep Miktarı", "Fiyattan Bağımsız Arz Miktarı",
-                                 "Maksimum Talep Miktarı", "Maksimum Arz Miktarı"]]
-        except __ConnectionError:
-            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-        except __Timeout:
-            __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-        except __HTTPError as e:
-            __dogrulama.__check_http_error(e.response.status_code)
-        except __RequestException:
-            __logging.error(__param.__request_error, exc_info=False)
-        except KeyError:
-            return __pd.DataFrame()
-        else:
-            return df_hacim
-
-
-def organizasyonel_hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
-                         bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"), eic=""):
-    """
-    İlgili tarih aralığı ve eic değeri verilmiş olan organizasyon için gün öncesi piyasası hacim bilgilerini
+    İlgili tarih aralığı için gün öncesi piyasası (GÖP) saatlik hacim bilgilerini vermektedir.
+    Not:
+    1) "organizasyon_eic" değeri girildiği taktirde organizasyona ait saatlik arz/talep eşleşme miktarı bilgisini
     vermektedir.
-
-    Önemli Bilgi
-    ----------
-    Organizasyon bilgisi girilmediği taktirde toplam piyasa hacmi bilgisi verilmektedir.
+    2) "organizasyon_eic" değeri girilmediği taktirde saatlik arz/talep eşleşme miktarı, fiyattan bağımsız teklif edilen
+    miktar, blok teklif eşleşme miktarı, ve maksimum teklif edilen miktar bilgisini vermektedir.
 
     Parametreler
     ------------
     baslangic_tarihi : %YYYY-%AA-%GG formatında başlangıç tarihi (Varsayılan: bugün)
-    bitis_tarihi   : %YYYY-%AA-%GG formatında bitiş tarihi (Varsayılan: bugün)
+    bitis_tarihi     : %YYYY-%AA-%GG formatında bitiş tarihi (Varsayılan: bugün)
+    organizasyon_eic : metin formatında organizasyon eic kodu (Varsayılan: "")
 
     Geri Dönüş Değeri
     -----------------
-    Arz/Talep Eşleşme Miktarı (MWh)
+    Arz/Talep Saatlik GÖP Hacmi (MWh)
     """
-    if __dogrulama.__baslangic_bitis_tarih_eic_dogrulama(baslangic_tarihi, bitis_tarihi, eic):
+    if __dogrulama.__baslangic_bitis_tarih_eic_dogrulama(baslangic_tarihi, bitis_tarihi, organizasyon_eic):
         try:
             resp = __requests.get(__transparency_url + "day-ahead-market-volume" +
-                                  "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi + "&eic=" + eic,
-                                  headers=__headers, timeout=__param.__timeout)
+                                  "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi + "&eic=" +
+                                  organizasyon_eic, headers=__headers, timeout=__param.__timeout)
             resp.raise_for_status()
             list_hacim = resp.json()["body"]["dayAheadMarketVolumeList"]
             df_hacim = __pd.DataFrame(list_hacim)
@@ -147,7 +94,12 @@ def organizasyonel_hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-
                                      "quantityOfAsk": "Maksimum Talep Miktarı",
                                      "quantityOfBid": "Maksimum Arz Miktarı"},
                             inplace=True)
-            df_hacim = df_hacim[["Tarih", "Saat", "Talep Eşleşme Miktarı", "Arz Eşleşme Miktarı"]]
+            if organizasyon_eic == "":
+                df_hacim = df_hacim[["Tarih", "Saat", "Talep Eşleşme Miktarı", "Eşleşme Miktarı", "Arz Eşleşme Miktarı",
+                                     "Fiyattan Bağımsız Talep Miktarı", "Fiyattan Bağımsız Arz Miktarı",
+                                     "Maksimum Talep Miktarı", "Maksimum Arz Miktarı"]]
+            else:
+                df_hacim = df_hacim[["Tarih", "Saat", "Talep Eşleşme Miktarı", "Arz Eşleşme Miktarı"]]
         except __ConnectionError:
             __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
         except __Timeout:
@@ -162,90 +114,39 @@ def organizasyonel_hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-
             return df_hacim
 
 
-def tum_organizasyonlar_net_hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
-                                  bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d")):
+def tum_organizasyonlar_hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
+                              bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"), hacim_tipi="NET"):
     """
-    İlgili tarih aralığı için tüm organizasyonların saatlik net göp hacim bilgilerini vermektedir.
+    İlgili tarih aralığı için tüm organizasyonların saatlik net hacim bilgilerini vermektedir.
 
     Parametreler
     ------------
     baslangic_tarihi : %YYYY-%AA-%GG formatında başlangıç tarihi (Varsayılan: bugün)
     bitis_tarihi     : %YYYY-%AA-%GG formatında bitiş tarihi (Varsayılan: bugün)
+    hacim_tipi       : metin formatında hacim tipi ("NET", "ARZ", yada "TALEP") (varsayılan: "NET")
 
     Geri Dönüş Değeri
     -----------------
-    Tüm Organizasyonların net GÖP Hacim Bilgileri (Tarih, Saat, Hacim)
+    Tüm Organizasyonların Saatlik GÖP Hacmi (Tarih, Saat, Hacim)
     """
     if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         org = __organizasyonlar()
-        list_org_eic = list(org["EIC Kodu"])
-        org_len = len(list_org_eic)
-        list_date_org_eic = list(zip([baslangic_tarihi] * org_len, [bitis_tarihi] * org_len, list_org_eic))
+        list_org = org[["EIC Kodu", "Kısa Adı"]].to_dict("records")
+        org_len = len(list_org)
+        list_date_org_eic = list(zip([baslangic_tarihi] * org_len, [bitis_tarihi] * org_len, list_org))
         list_date_org_eic = list(map(list, list_date_org_eic))
         with __Pool(__mp.cpu_count()) as p:
-            list_df_unit = p.starmap(__organizasyonel_net_hacim, list_date_org_eic, chunksize=1)
+            if hacim_tipi.lower() == "net":
+                list_df_unit = p.starmap(__organizasyonel_net_hacim, list_date_org_eic, chunksize=1)
+            elif hacim_tipi.lower() == "arz":
+                list_df_unit = p.starmap(__organizasyonel_arz_hacim, list_date_org_eic, chunksize=1)
+            elif hacim_tipi.lower() == "talep":
+                list_df_unit = p.starmap(__organizasyonel_talep_hacim, list_date_org_eic, chunksize=1)
+            else:
+                __logging.error("Lütfen geçerli bir hacim tipi giriniz: Net, Arz, Talep", exc_info=False)
         list_df_unit = list(filter(lambda x: len(x) > 0, list_df_unit))
         df_unit = __red(lambda left, right: __pd.merge(left, right, how="outer", on=["Tarih", "Saat"], sort=True),
                         list_df_unit)
-        df_unit = __araclar.__change_df_eic_column_names_with_short_names(df_unit, org)
-        return df_unit
-
-
-def tum_organizasyonlar_arz_hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
-                                  bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d")):
-    """
-    İlgili tarih aralığı için tüm organizasyonların saatlik arz göp hacim bilgilerini vermektedir.
-
-    Parametreler
-    ------------
-    baslangic_tarihi : %YYYY-%AA-%GG formatında başlangıç tarihi (Varsayılan: bugün)
-    bitis_tarihi     : %YYYY-%AA-%GG formatında bitiş tarihi (Varsayılan: bugün)
-
-    Geri Dönüş Değeri
-    -----------------
-    Tüm Organizasyonların arz GÖP Hacim Bilgileri (Tarih, Saat, Hacim)
-    """
-    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
-        org = __organizasyonlar()
-        list_org_eic = list(org["EIC Kodu"])
-        org_len = len(list_org_eic)
-        list_date_org_eic = list(zip([baslangic_tarihi] * org_len, [bitis_tarihi] * org_len, list_org_eic))
-        list_date_org_eic = list(map(list, list_date_org_eic))
-        with __Pool(__mp.cpu_count()) as p:
-            list_df_unit = p.starmap(__organizasyonel_arz_hacim, list_date_org_eic, chunksize=1)
-        list_df_unit = list(filter(lambda x: len(x) > 0, list_df_unit))
-        df_unit = __red(lambda left, right: __pd.merge(left, right, how="outer", on=["Tarih", "Saat"], sort=True),
-                        list_df_unit)
-        df_unit = __araclar.__change_df_eic_column_names_with_short_names(df_unit, org)
-        return df_unit
-
-
-def tum_organizasyonlar_talep_hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
-                                    bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d")):
-    """
-    İlgili tarih aralığı için tüm organizasyonların saatlik talep göp hacim bilgilerini vermektedir.
-
-    Parametreler
-    ------------
-    baslangic_tarihi : %YYYY-%AA-%GG formatında başlangıç tarihi (Varsayılan: bugün)
-    bitis_tarihi     : %YYYY-%AA-%GG formatında bitiş tarihi (Varsayılan: bugün)
-
-    Geri Dönüş Değeri
-    -----------------
-    Tüm Organizasyonların talep GÖP Hacim Bilgileri (Tarih, Saat, Hacim)
-    """
-    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
-        org = __organizasyonlar()
-        list_org_eic = list(org["EIC Kodu"])
-        org_len = len(list_org_eic)
-        list_date_org_eic = list(zip([baslangic_tarihi] * org_len, [bitis_tarihi] * org_len, list_org_eic))
-        list_date_org_eic = list(map(list, list_date_org_eic))
-        with __Pool(__mp.cpu_count()) as p:
-            list_df_unit = p.starmap(__organizasyonel_talep_hacim, list_date_org_eic, chunksize=1)
-        list_df_unit = list(filter(lambda x: len(x) > 0, list_df_unit))
-        df_unit = __red(lambda left, right: __pd.merge(left, right, how="outer", on=["Tarih", "Saat"], sort=True),
-                        list_df_unit)
-        df_unit = __araclar.__change_df_eic_column_names_with_short_names(df_unit, org)
         return df_unit
 
 
@@ -289,7 +190,7 @@ def arz_talep_egrisi(tarih=__dt.datetime.today().strftime("%Y-%m-%d")):
 def islem_hacmi(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                 bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d")):
     """
-    İlgili tarih aralığı için gün öncesi piyasası arz/talep işlem hacmi bilgilerini vermektedir.
+    İlgili tarih aralığı için arz/talep işlem hacmi bilgilerini vermektedir.
 
     Parametreler
     ------------
@@ -334,7 +235,7 @@ def islem_hacmi(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
 def blok_miktari(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                  bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d")):
     """
-    İlgili tarih aralığı için gün öncesi piyasası alış/satış yönünde verilen ve eşleşen blok teklif miktar bilgilerini
+    İlgili tarih aralığı için saatlik gün öncesi piyasası teklif edilen ve eşleşen blok teklif miktar bilgilerini
     vermektedir.
 
     Parametreler
@@ -344,7 +245,7 @@ def blok_miktari(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
 
     Geri Dönüş Değeri
     -----------------
-    Alış/Satış Verilen ve Eşleşen Blok Teklif Miktarları (MWh)
+    Teklif Edilen ve Eşleşen Blok Teklif Miktarları (MWh)
     """
     if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
@@ -381,8 +282,8 @@ def blok_miktari(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
 def fark_tutari(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                 bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d")):
     """
-    İlgili tarih aralığı için gün öncesi piyasasında alış, satış ve yuvarlama kaynaklı oluşan fark tutarı bilgilerini
-    vermektedir.
+    İlgili tarih aralığı için günlük gün öncesi piyasasında arz, talep ve yuvarlama kaynaklı oluşan fark tutarı
+    bilgilerini vermektedir.
 
     Parametreler
     ------------
@@ -391,7 +292,7 @@ def fark_tutari(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
 
     Geri Dönüş Değeri
     -----------------
-    Alış, Satış, Yuvarlama Kaynaklı Fark Tutarı (₺)
+    Arz, Talep, Yuvarlama Kaynaklı Fark Tutarı (₺)
     """
     if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
@@ -423,7 +324,7 @@ def fark_tutari(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
 
 def kptf(tarih=(__dt.datetime.today() + __dt.timedelta(days=1)).strftime("%Y-%m-%d")):
     """
-    İlgili tarih için gün öncesi piyasası kesinleşmemiş piyasa takas fiyatını vermektedir.
+    İlgili tarih için saatlik gün öncesi piyasası kesinleşmemiş piyasa takas fiyatını vermektedir.
 
     Parametreler
     ------------
@@ -457,15 +358,15 @@ def kptf(tarih=(__dt.datetime.today() + __dt.timedelta(days=1)).strftime("%Y-%m-
             return df_kptf
 
 
-def __organizasyonel_net_hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
-                               bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"), eic=""):
+def __organizasyonel_net_hacim(baslangic_tarihi, bitis_tarihi, org):
     """
     İlgili tarih aralığı ve organizasyon için gün öncesi piyasası toplam eşleşme miktar bilgisini vermektedir.
 
     Parametreler
     ------------
-    baslangic_tarihi : %YYYY-%AA-%GG formatında başlangıç tarihi (Varsayılan: bugün)
-    bitis_tarihi   : %YYYY-%AA-%GG formatında bitiş tarihi (Varsayılan: bugün)
+    baslangic_tarihi : %YYYY-%AA-%GG formatında başlangıç tarihi
+    bitis_tarihi     : %YYYY-%AA-%GG formatında bitiş tarihi
+    org              : dict formatında organizasyon EIC Kodu, Kısa Adı
 
     Geri Dönüş Değeri
     -----------------
@@ -473,7 +374,7 @@ def __organizasyonel_net_hacim(baslangic_tarihi=__dt.datetime.today().strftime("
     """
     try:
         resp = __requests.get(__transparency_url + "day-ahead-market-volume" +
-                              "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi + "&eic=" + eic,
+                              "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi + "&eic=" + org["EIC Kodu"],
                               headers=__headers, timeout=__param.__timeout)
         resp.raise_for_status()
         list_hacim = resp.json()["body"]["dayAheadMarketVolumeList"]
@@ -483,8 +384,8 @@ def __organizasyonel_net_hacim(baslangic_tarihi=__dt.datetime.today().strftime("
         df_hacim.rename(index=str,
                         columns={"matchedBids": "Talep Eşleşme Miktarı", "matchedOffers": "Arz Eşleşme Miktarı"},
                         inplace=True)
-        df_hacim[eic] = df_hacim["Talep Eşleşme Miktarı"] - df_hacim["Arz Eşleşme Miktarı"]
-        df_hacim = df_hacim[["Tarih", "Saat", eic]]
+        df_hacim[org["EIC Kodu"]] = df_hacim["Talep Eşleşme Miktarı"] - df_hacim["Arz Eşleşme Miktarı"]
+        df_hacim = df_hacim[["Tarih", "Saat", org["EIC Kodu"]]]
     except __ConnectionError:
         __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
     except __Timeout:
@@ -499,23 +400,23 @@ def __organizasyonel_net_hacim(baslangic_tarihi=__dt.datetime.today().strftime("
         return df_hacim
 
 
-def __organizasyonel_arz_hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
-                               bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"), eic=""):
+def __organizasyonel_arz_hacim(baslangic_tarihi, bitis_tarihi, org):
     """
     İlgili tarih aralığı ve organizasyon için gün öncesi piyasası saatlik arz eşleşme miktar bilgisini vermektedir.
 
     Parametreler
     ------------
-    baslangic_tarihi : %YYYY-%AA-%GG formatında başlangıç tarihi (Varsayılan: bugün)
-    bitis_tarihi   : %YYYY-%AA-%GG formatında bitiş tarihi (Varsayılan: bugün)
+    baslangic_tarihi : %YYYY-%AA-%GG formatında başlangıç tarihi
+    bitis_tarihi     : %YYYY-%AA-%GG formatında bitiş tarihi
+    org              : dict formatında organizasyon EIC Kodu, Kısa Adı
 
     Geri Dönüş Değeri
     -----------------
-    ORganizasyonel Arz Eşleşme Miktarı (MWh)
+    Organizasyonel Arz Eşleşme Miktarı (MWh)
     """
     try:
         resp = __requests.get(__transparency_url + "day-ahead-market-volume" +
-                              "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi + "&eic=" + eic,
+                              "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi + "&eic=" + org["EIC Kodu"],
                               headers=__headers, timeout=__param.__timeout)
         resp.raise_for_status()
         list_hacim = resp.json()["body"]["dayAheadMarketVolumeList"]
@@ -526,8 +427,8 @@ def __organizasyonel_arz_hacim(baslangic_tarihi=__dt.datetime.today().strftime("
         df_hacim.rename(index=str,
                         columns={"matchedOffers": "Arz Eşleşme Miktarı"},
                         inplace=True)
-        df_hacim[eic] = df_hacim["Arz Eşleşme Miktarı"]
-        df_hacim = df_hacim[["Tarih", "Saat", eic]]
+        df_hacim[org["Kısa Adı"]] = df_hacim["Arz Eşleşme Miktarı"]
+        df_hacim = df_hacim[["Tarih", "Saat", org["Kısa Adı"]]]
     except __ConnectionError:
         __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
     except __Timeout:
@@ -542,15 +443,15 @@ def __organizasyonel_arz_hacim(baslangic_tarihi=__dt.datetime.today().strftime("
         return df_hacim
 
 
-def __organizasyonel_talep_hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
-                                 bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"), eic=""):
+def __organizasyonel_talep_hacim(baslangic_tarihi, bitis_tarihi, org):
     """
     İlgili tarih aralığı ve organizasyon için gün öncesi piyasası saatlik talep eşleşme miktar bilgisini vermektedir.
 
     Parametreler
     ------------
-    baslangic_tarihi : %YYYY-%AA-%GG formatında başlangıç tarihi (Varsayılan: bugün)
-    bitis_tarihi   : %YYYY-%AA-%GG formatında bitiş tarihi (Varsayılan: bugün)
+    baslangic_tarihi : %YYYY-%AA-%GG formatında başlangıç tarihi
+    bitis_tarihi     : %YYYY-%AA-%GG formatında bitiş tarihi
+    org              : dict formatında organizasyon EIC Kodu, Kısa Adı
 
     Geri Dönüş Değeri
     -----------------
@@ -558,7 +459,7 @@ def __organizasyonel_talep_hacim(baslangic_tarihi=__dt.datetime.today().strftime
     """
     try:
         resp = __requests.get(__transparency_url + "day-ahead-market-volume" +
-                              "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi + "&eic=" + eic,
+                              "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi + "&eic=" + org["EIC Kodu"],
                               headers=__headers, timeout=__param.__timeout)
         resp.raise_for_status()
         list_hacim = resp.json()["body"]["dayAheadMarketVolumeList"]
@@ -568,8 +469,8 @@ def __organizasyonel_talep_hacim(baslangic_tarihi=__dt.datetime.today().strftime
         df_hacim.rename(index=str,
                         columns={"matchedBids": "Talep Eşleşme Miktarı"},
                         inplace=True)
-        df_hacim[eic] = df_hacim["Talep Eşleşme Miktarı"]
-        df_hacim = df_hacim[["Tarih", "Saat", eic]]
+        df_hacim[org["Kısa Adı"]] = df_hacim["Talep Eşleşme Miktarı"]
+        df_hacim = df_hacim[["Tarih", "Saat", org["Kısa Adı"]]]
     except __ConnectionError:
         __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
     except __Timeout:

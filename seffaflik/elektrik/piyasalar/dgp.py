@@ -65,7 +65,7 @@ def hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
 
     Geri Dönüş Değeri
     ------
-    YAL/YAT Talimat Miktarları
+    YAL/YAT Talimat Miktarları (MWh)
     """
     if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:

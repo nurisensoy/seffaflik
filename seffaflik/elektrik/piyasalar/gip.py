@@ -14,7 +14,7 @@ __headers = __api.HEADERS
 def aof(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
         bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d")):
     """
-    İlgili tarih aralığı için saatlik ağırlıklı ortalama fiyat (AOF) vermektedir.
+    İlgili tarih aralığı için gün içi piyasası (GİP) saatlik ağırlıklı ortalama fiyat (AOF) bilgisini vermektedir.
 
     Parametreler
     ------------
@@ -23,7 +23,7 @@ def aof(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
 
     Geri Dönüş Değeri
     -----------------
-    Ağırlıklı Ortalama Fiyat (₺/MWh)
+    Saatlik Ağırlıklı Ortalama Fiyat (₺/MWh)
     """
     if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
@@ -78,18 +78,18 @@ def ozet(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
             df_ozet["Tarih"] = __pd.to_datetime(df_ozet["date"].apply(lambda d: d[:10]))
             df_ozet.rename(index=str,
                            columns={"id": "Id", "contract": "Kontrat Adı",
-                                    "quantityOfAsk": "Teklif Edilen Alış Miktarı",
-                                    "quantityOfBid": "Teklif Edilen Satış Miktarı", "volume": "Eşleşme Miktarı",
+                                    "quantityOfAsk": "Teklif Edilen Talep Miktarı",
+                                    "quantityOfBid": "Teklif Edilen Arz Miktarı", "volume": "Eşleşme Miktarı",
                                     "tradingVolume": "İşlem Hacmi",
-                                    "minAskPrice": "Min. Alış Fiyatı", "maxAskPrice": "Max. Alış Fiyatı",
-                                    "minBidPrice": "Min. Satış Fiyatı", "maxBidPrice": "Max. Satış Fiyatı",
+                                    "minAskPrice": "Min. Talep Fiyatı", "maxAskPrice": "Max. Talep Fiyatı",
+                                    "minBidPrice": "Min. Arz Fiyatı", "maxBidPrice": "Max. Arz Fiyatı",
                                     "minMatchPrice": "Min. Eşleşme Fiyatı",
                                     "maxMatchPrice": "Max. Eşleşme Fiyatı"},
                            inplace=True)
             df_ozet = df_ozet[
-                ["Tarih", "Saat", "Id", "Kontrat Adı", "Teklif Edilen Alış Miktarı", "Teklif Edilen Satış Miktarı",
-                 "Eşleşme Miktarı", "İşlem Hacmi", "Min. Alış Fiyatı", "Max. Alış Fiyatı",
-                 "Min. Satış Fiyatı", "Max. Satış Fiyatı",
+                ["Tarih", "Saat", "Id", "Kontrat Adı", "Teklif Edilen Talep Miktarı", "Teklif Edilen Arz Miktarı",
+                 "Eşleşme Miktarı", "İşlem Hacmi", "Min. Talep Fiyatı", "Max. Talep Fiyatı",
+                 "Min. Arz Fiyatı", "Max. Arz Fiyatı",
                  "Min. Eşleşme Fiyatı", "Max. Eşleşme Fiyatı"]]
         except __ConnectionError:
             __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
@@ -106,7 +106,7 @@ def ozet(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
 
 
 def hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
-                    bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d")):
+          bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d")):
     """
     İlgili tarih aralığı için gün içi piyasası (GİP) hacim bilgilerini vermektedir.
 
@@ -117,7 +117,7 @@ def hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
 
     Geri Dönüş Değeri
     ------
-    Eşleşme Miktarı (MWh)
+    GİP Saatlik Hacim (MWh)
     """
     if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
@@ -153,12 +153,12 @@ def hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
 def islem_hacmi(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                 bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d")):
     """
-    İlgili tarih aralığı için gün içi piyasası arz/talep işlem hacmi bilgilerini vermektedir.
+    İlgili tarih aralığı için gün içi piyasası (GİP) arz/talep işlem hacmi bilgilerini vermektedir.
 
     Parametreler
     ------------
     baslangic_tarihi : %YYYY-%AA-%GG formatında başlangıç tarihi (Varsayılan: bugün)
-    bitis_tarihi   : %YYYY-%AA-%GG formatında bitiş tarihi (Varsayılan: bugün)
+    bitis_tarihi     : %YYYY-%AA-%GG formatında bitiş tarihi (Varsayılan: bugün)
 
     Geri Dönüş Değeri
     -----------------
@@ -235,7 +235,7 @@ def islem_akisi(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
 def teklif_edilen_miktarlar(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                             bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d")):
     """
-    İlgili tarih aralığı için gün içi piyasasına teklif edilen saatlik ve blok satış/alış miktar bilgilerini
+    İlgili tarih aralığı için gün içi piyasasına (GİP) teklif edilen saatlik ve blok arz/talep miktar bilgilerini
     vermektedir.
 
     Parametreler
@@ -245,7 +245,7 @@ def teklif_edilen_miktarlar(baslangic_tarihi=__dt.datetime.today().strftime("%Y-
 
     Geri Dönüş Değeri
     -----------------
-    Teklif Edilen Saatlik/Blok Alış/Satış Miktarları
+    GİP Teklif Edilen Saatlik/Blok Talep/Arz Miktarları
     """
     if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
@@ -257,13 +257,13 @@ def teklif_edilen_miktarlar(baslangic_tarihi=__dt.datetime.today().strftime("%Y-
             df_tem = __pd.DataFrame(list_tem)
             df_tem["Saat"] = df_tem["effectiveDate"].apply(lambda h: int(h[11:13]))
             df_tem["Tarih"] = __pd.to_datetime(df_tem["effectiveDate"].apply(lambda d: d[:10]))
-            df_tem.rename(index=str, columns={"blockPurchaseQuantity": "Blok Alış Miktarı",
-                                              "blockSaleQuantity": "Blok Satış Miktarı",
-                                              "hourlyPurchaseQuantity": "Saatlik Alış Miktarı",
-                                              "hourlySaleQuantity": "Saatlik Satış Miktarı"},
+            df_tem.rename(index=str, columns={"blockPurchaseQuantity": "Blok Talep Miktarı",
+                                              "blockSaleQuantity": "Blok Arz Miktarı",
+                                              "hourlyPurchaseQuantity": "Saatlik Talep Miktarı",
+                                              "hourlySaleQuantity": "Saatlik Arz Miktarı"},
                           inplace=True)
-            df_tem = df_tem[["Tarih", "Saat", "Saatlik Alış Miktarı", "Blok Alış Miktarı",
-                             "Saatlik Satış Miktarı", "Blok Satış Miktarı"]]
+            df_tem = df_tem[["Tarih", "Saat", "Saatlik Talep Miktarı", "Blok Talep Miktarı",
+                             "Saatlik Arz Miktarı", "Blok Arz Miktarı"]]
         except __ConnectionError:
             __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
         except __Timeout:
@@ -279,26 +279,27 @@ def teklif_edilen_miktarlar(baslangic_tarihi=__dt.datetime.today().strftime("%Y-
 
 
 def min_max_fiyatlar(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
-                     bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"), teklif_tipi="HOURLY"):
+                     bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"), teklif_tipi="SAATLIK"):
     """
-    İlgili tarih aralığı ve teklif tipi için teklif edilen ve eşleşme fiyatlarının minimum ve maksimum değerlerinin
-    bilgilerini vermektedir.
+    İlgili tarih aralığı ve teklif tipi için gün içi piyasasında (GİP) teklif edilen ve eşleşme fiyatlarının minimum ve
+    maksimum değerlerinin bilgilerini vermektedir.
 
     Parametreler
     ------------
     baslangic_tarihi : %YYYY-%AA-%GG formatında başlangıç tarihi (Varsayılan: bugün)
     bitis_tarihi     : %YYYY-%AA-%GG formatında bitiş tarihi (Varsayılan: bugün)
-    teklif_tipi      : metin formatında teklif tipi ("HOURLY" ya da "BLOCK") (Varsayılan: "HOURLY")
+    teklif_tipi      : metin formatında teklif tipi ("SAATLIK" ya da "BLOK") (Varsayılan: "SAATLIK")
 
     Geri Dönüş Değeri
     -----------------
-    Teklif Edilen ve Eşleşen Tekliferin Min./Max. Fiyat Değerleri (₺/MWh)
+    GİP Teklif Edilen ve Eşleşen Tekliflerin Min./Max. Fiyat Değerleri (₺/MWh)
     """
     if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
+            bid_types = {"saatlik": "HOURLY", "blok": "BLOCK"}
             resp = __requests.get(
                 __transparency_url + "intra-day-min-max-price" + "?startDate=" + baslangic_tarihi +
-                "&endDate=" + bitis_tarihi + "&offerType=" + teklif_tipi, headers=__headers)
+                "&endDate=" + bitis_tarihi + "&offerType=" + bid_types[teklif_tipi.lower()], headers=__headers)
             resp.raise_for_status()
             list_fiyat = resp.json()["body"]["minMaxPriceList"]
             df_fiyat = __pd.DataFrame(list_fiyat)

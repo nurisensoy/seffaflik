@@ -6,11 +6,6 @@ __requestsConnectionErrorLogging = "Bağlantı Hatası! Lütfen internet bağlan
 __requestsAuthenticationErrorLogging = "Kimlik dosyası oluşturulmamış yada geçersiz kimlik! Lütfen kimlik bilgilerinizi kontrol edip kimlik dosyasını tekrar oluşturunuz!"
 __requestsTimeoutErrorLogging = "İstek zaman aşımına uğradı! Web-Servis şartnamesinde belirtmiş olduğunuz IP adresini kullandığınızdan emin olunuz!"
 ##Requests timeout
-__timeout = 10
+__timeout = 1000000
 ##
-translations = {
-    "saatlik": "HOURLY",
-    "günlük": "DAILY",
-    "aylik": "MONTHLY",
-    "yillik": "YEAR"
-}
+

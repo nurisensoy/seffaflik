@@ -1,6 +1,6 @@
 import datetime as __datetime
 import logging as __logging
-from seffaflik.ortak import parametreler as __param
+from seffaflik.__ortak import __parametreler as __param
 
 
 def __baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):

@@ -3,10 +3,10 @@ class Kimlik:
         """Api anahtarını `~/.seffaflik/.kimlik` içerisinde oluşturur.
         :param istemci_taniticisi: Şeffaflık Platformuna kayıt olurken verilen api anahtarı
         """
-        from seffaflik.__ortak import __anahtar
+        from seffaflik.__ortak.__anahtar import HEADERS
         import os as __os
         import json as __json
-        __anahtar.HEADERS["x-ibm-client-id"] = istemci_taniticisi
+        HEADERS["x-ibm-client-id"] = istemci_taniticisi
         seffaflik_dir = __os.environ.get("SEFFAFLIK_DIR",
                                          __os.path.join(__os.path.expanduser("~"), ".seffaflik"))
         if not __os.path.exists(seffaflik_dir):

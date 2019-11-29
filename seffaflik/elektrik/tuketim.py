@@ -9,7 +9,7 @@ import multiprocessing as __mp
 from functools import reduce as __red
 import logging as __logging
 
-from seffaflik.ortak import dogrulama as __dogrulama, parametreler as __param, anahtar as __api
+from seffaflik.__ortak import __dogrulama as __dogrulama, __parametreler as __param, __anahtar as __api
 
 __transparency_url = __param.SEFFAFLIK_URL + "consumption/"
 __headers = __api.HEADERS

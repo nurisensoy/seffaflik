@@ -5,10 +5,10 @@ import pandas as __pd
 import datetime as __dt
 import logging as __logging
 
-from seffaflik.ortak import dogrulama as __dogrulama, parametreler as __param, anahtar as __api
+from seffaflik.__ortak import __dogrulama, __parametreler, __anahtar
 
-__transparency_url = __param.SEFFAFLIK_URL + "market/"
-__headers = __api.HEADERS
+__transparency_url = __parametreler.SEFFAFLIK_URL + "market/"
+__headers = __anahtar.HEADERS
 
 
 def dengesizlik(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
@@ -30,7 +30,7 @@ def dengesizlik(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
         try:
             resp = __requests.get(
                 __transparency_url + "energy-imbalance-hourly" + "?startDate=" + baslangic_tarihi + "&endDate=" +
-                bitis_tarihi, headers=__headers, timeout=__param.__timeout)
+                bitis_tarihi, headers=__headers, timeout=__parametreler.__timeout)
             resp.raise_for_status()
             list_dengesizlik = resp.json()["body"]["energyImbalances"]
             df_dengesizlik = __pd.DataFrame(list_dengesizlik)
@@ -46,13 +46,13 @@ def dengesizlik(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                  "Pozitif Dengesizlik Tutarı (TL)", "Negatif Dengesizlik Tutarı (TL)"]]
             df_dengesizlik.dropna(subset=df_dengesizlik.columns[2:], how="all", inplace=True)
         except __ConnectionError:
-            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
+            __logging.error(__parametreler.__requestsConnectionErrorLogging, exc_info=False)
         except __Timeout:
-            __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
+            __logging.error(__parametreler.__requestsTimeoutErrorLogging, exc_info=False)
         except __HTTPError as e:
             __dogrulama.__check_http_error(e.response.status_code)
         except __RequestException:
-            __logging.error(__param.__request_error, exc_info=False)
+            __logging.error(__parametreler.__request_error, exc_info=False)
         except KeyError:
             return __pd.DataFrame()
         else:

@@ -10,7 +10,7 @@ from functools import reduce as __red
 import logging as __logging
 
 from seffaflik.elektrik.piyasalar import ia as __ia, gop as __gop, gip as __gip, dgp as __dgp
-from seffaflik.ortak import dogrulama as __dogrulama, parametreler as __param, anahtar as __api
+from seffaflik.__ortak import __dogrulama as __dogrulama, __parametreler as __param, __anahtar as __api
 
 __transparency_url = __param.SEFFAFLIK_URL + "market/"
 __headers = __api.HEADERS

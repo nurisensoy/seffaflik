@@ -39,7 +39,7 @@ $ pip install seffaflik
 ### Kimlik (Client Id) Oluşturulması
 ```python
 import seffaflik
-seffaflik.ortak.anahtar.kimlik_dosyasi_olustur(istemci_kimligi="abcdefg")
+seffaflik.Kimlik(istemci_taniticisi="abcdefg")
 ```
 Yukarıdaki işlemi gerçekleştirmenizden sonra ana dizininize özel bir
 .seffaflik/.kimlik dosyası yerleştirir. ~/.seffaflik/.kimlik dosyanız aşağıdaki

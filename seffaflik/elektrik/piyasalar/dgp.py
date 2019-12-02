@@ -1,14 +1,10 @@
-import requests as __requests
-from requests import ConnectionError as __ConnectionError
-from requests.exceptions import HTTPError as __HTTPError, RequestException as __RequestException, Timeout as __Timeout
 import pandas as __pd
 import datetime as __dt
-import logging as __logging
 
-from seffaflik.__ortak import __dogrulama as __dogrulama, __parametreler as __param, __anahtar as __api
+from seffaflik.__ortak.__araclar import make_requests as __make_requests
+from seffaflik.__ortak import __dogrulama as __dogrulama
 
-__transparency_url = __param.SEFFAFLIK_URL + "market/"
-__headers = __api.HEADERS
+__first_part_url = "market/"
 
 
 def smf(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
@@ -27,30 +23,20 @@ def smf(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
     """
     if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
-            resp = __requests.get(
-                __transparency_url + "smp" + "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi,
-                headers=__headers, timeout=__param.__timeout)
-            resp.raise_for_status()
-            list_smf = resp.json()["body"]["smpList"]
-            df_smf = __pd.DataFrame(list_smf)
-            df_smf["Saat"] = df_smf["date"].apply(lambda h: int(h[11:13]))
-            df_smf["Tarih"] = __pd.to_datetime(df_smf["date"].apply(lambda d: d[:10]))
-            df_smf.rename(index=str,
-                          columns={"price": "SMF", "smpDirection": "Sistem Yönü"},
-                          inplace=True)
-            df_smf = df_smf[["Tarih", "Saat", "SMF", "Sistem Yönü"]]
-        except __ConnectionError:
-            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-        except __Timeout:
-            __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-        except __HTTPError as e:
-            __dogrulama.__check_http_error(e.response.status_code)
-        except __RequestException:
-            __logging.error(__param.__request_error, exc_info=False)
+            particular_url = \
+                __first_part_url + "smp" + "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi
+            json = __make_requests(particular_url)
+            df = __pd.DataFrame(json["body"]["smpList"])
+            df["Saat"] = df["date"].apply(lambda h: int(h[11:13]))
+            df["Tarih"] = __pd.to_datetime(df["date"].apply(lambda d: d[:10]))
+            df.rename(index=str,
+                      columns={"price": "SMF", "smpDirection": "Sistem Yönü"},
+                      inplace=True)
+            df = df[["Tarih", "Saat", "SMF", "Sistem Yönü"]]
         except KeyError:
             return __pd.DataFrame()
         else:
-            return df_smf
+            return df
 
 
 def hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
@@ -69,35 +55,25 @@ def hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
     """
     if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
-            resp = __requests.get(__transparency_url + "bpm-order-summary" +
-                                  "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi,
-                                  headers=__headers, timeout=__param.__timeout)
-            resp.raise_for_status()
-            list_hacim = resp.json()["body"]["bpmorderSummaryList"]
-            df_hacim = __pd.DataFrame(list_hacim)
-            df_hacim["Saat"] = df_hacim["date"].apply(lambda h: int(h[11:13]))
-            df_hacim["Tarih"] = __pd.to_datetime(df_hacim["date"].apply(lambda d: d[:10]))
-            df_hacim.rename(index=str,
-                            columns={"net": "Net", "upRegulationZeroCoded": "YAL (0)",
-                                     "upRegulationOneCoded": "YAL (1)", "upRegulationTwoCoded": "YAL (2)",
-                                     "downRegulationZeroCoded": "YAT (0)", "downRegulationOneCoded": "YAT (1)",
-                                     "downRegulationTwoCoded": "YAT (2)", "upRegulationDelivered": "Teslim Edilen YAL",
-                                     "downRegulationDelivered": "Teslim Edilen YAT", "direction": "Sistem Yönü"},
-                            inplace=True)
-            df_hacim["Sistem Yönü"] = df_hacim["Sistem Yönü"].map(
+            particular_url = \
+                __first_part_url + "bpm-order-summary" + "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi
+            json = __make_requests(particular_url)
+            df = __pd.DataFrame(json["body"]["bpmorderSummaryList"])
+            df["Saat"] = df["date"].apply(lambda h: int(h[11:13]))
+            df["Tarih"] = __pd.to_datetime(df["date"].apply(lambda d: d[:10]))
+            df.rename(index=str,
+                      columns={"net": "Net", "upRegulationZeroCoded": "YAL (0)",
+                               "upRegulationOneCoded": "YAL (1)", "upRegulationTwoCoded": "YAL (2)",
+                               "downRegulationZeroCoded": "YAT (0)", "downRegulationOneCoded": "YAT (1)",
+                               "downRegulationTwoCoded": "YAT (2)", "upRegulationDelivered": "Teslim Edilen YAL",
+                               "downRegulationDelivered": "Teslim Edilen YAT", "direction": "Sistem Yönü"},
+                      inplace=True)
+            df["Sistem Yönü"] = df["Sistem Yönü"].map(
                 {"IN_BALANCE": "Dengede", "ENERGY_SURPLUS": "Enerji Fazlası", "ENERGY_DEFICIT": "Enerji Açığı"})
-            df_hacim = df_hacim[
+            df = df[
                 ["Tarih", "Saat", "Net", "YAL (0)", "YAL (1)", "YAL (2)", "Teslim Edilen YAL", "YAT (0)", "YAT (1)",
                  "YAT (2)", "Teslim Edilen YAT", "Sistem Yönü"]]
-        except __ConnectionError:
-            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-        except __Timeout:
-            __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-        except __HTTPError as e:
-            __dogrulama.__check_http_error(e.response.status_code)
-        except __RequestException:
-            __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
             return __pd.DataFrame()
         else:
-            return df_hacim
+            return df

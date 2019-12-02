@@ -1,17 +1,13 @@
-import requests as __requests
-from requests import ConnectionError as __ConnectionError
-from requests.exceptions import HTTPError as __HTTPError, RequestException as __RequestException, Timeout as __Timeout
 import pandas as __pd
 import datetime as __dt
 from multiprocessing import Pool as __Pool
 import multiprocessing as __mp
 from functools import reduce as __red
-import logging as __logging
 
-from seffaflik.__ortak import __dogrulama as __dogrulama, __parametreler as __param, __anahtar as __api
+from seffaflik.__ortak.__araclar import make_requests as __make_requests
+from seffaflik.__ortak import __dogrulama as __dogrulama
 
-__transparency_url = __param.SEFFAFLIK_URL + "production/"
-__headers = __api.HEADERS
+__first_part_url = "production/"
 
 
 def organizasyonlar():
@@ -26,28 +22,19 @@ def organizasyonlar():
     KGÜP Girebilen Organizasyon Bilgileri(Id, Adı, EIC Kodu, Kısa Adı, Durum)
     """
     try:
-        resp = __requests.get(__transparency_url + "dpp-organization", headers=__headers, timeout=__param.__timeout)
-        resp.raise_for_status()
-        list_org = resp.json()["body"]["organizations"]
-        df_org = __pd.DataFrame(list_org)
-        df_org.rename(index=str,
-                      columns={"organizationId": "Id", "organizationName": "Adı",
-                               "organizationETSOCode": "EIC Kodu", "organizationShortName": "Kısa Adı",
-                               "organizationStatus": "Durum"},
-                      inplace=True)
-        df_org = df_org[["Id", "Adı", "EIC Kodu", "Kısa Adı", "Durum"]]
-    except __ConnectionError:
-        __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-    except __Timeout:
-        __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-    except __HTTPError as e:
-        __dogrulama.__check_http_error(e.response.status_code)
-    except __RequestException:
-        __logging.error(__param.__request_error, exc_info=False)
+        particular_url = __first_part_url + "dpp-organization"
+        json = __make_requests(particular_url)
+        df = __pd.DataFrame(json["body"]["organizations"])
+        df.rename(index=str,
+                  columns={"organizationId": "Id", "organizationName": "Adı",
+                           "organizationETSOCode": "EIC Kodu", "organizationShortName": "Kısa Adı",
+                           "organizationStatus": "Durum"},
+                  inplace=True)
+        df = df[["Id", "Adı", "EIC Kodu", "Kısa Adı", "Durum"]]
     except KeyError:
         return __pd.DataFrame()
     else:
-        return df_org
+        return df
 
 
 def organizasyon_veris_cekis_birimleri(eic):
@@ -66,21 +53,11 @@ def organizasyon_veris_cekis_birimleri(eic):
 
     if __dogrulama.__kgup_girebilen_organizasyon_dogrulama(eic):
         try:
-            resp = __requests.get(__transparency_url + "dpp-injection-unit-name?organizationEIC=" + eic,
-                                  headers=__headers, timeout=__param.__timeout)
-            resp.raise_for_status()
-            list_unit = resp.json()["body"]["injectionUnitNames"]
-            df_unit = __pd.DataFrame(list_unit)
+            particular_url = __first_part_url + "dpp-injection-unit-name?organizationEIC=" + eic
+            json = __make_requests(particular_url)
+            df_unit = __pd.DataFrame(json["body"]["injectionUnitNames"])
             df_unit.rename(index=str, columns={"id": "Id", "name": "Adı", "eic": "EIC Kodu"}, inplace=True)
             df_unit = df_unit[["Id", "Adı", "EIC Kodu"]]
-        except __ConnectionError:
-            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-        except __Timeout:
-            __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-        except __HTTPError as e:
-            __dogrulama.__check_http_error(e.response.status_code)
-        except __RequestException:
-            __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
             return __pd.DataFrame()
         else:
@@ -128,34 +105,23 @@ def kgup(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
     """
     if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
-            resp = __requests.get(
-                __transparency_url + "dpp" + "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi +
-                "&organizationEIC=" + organizasyon_eic + "&uevcbEIC=" + uevcb_eic, headers=__headers,
-                timeout=__param.__timeout)
-            resp.raise_for_status()
-            list_kgup = resp.json()["body"]["dppList"]
-            df_kgup = __pd.DataFrame(list_kgup)
-            df_kgup["Saat"] = df_kgup["tarih"].apply(lambda h: int(h[11:13]))
-            df_kgup["Tarih"] = __pd.to_datetime(df_kgup["tarih"].apply(lambda d: d[:10]))
-            df_kgup.rename(index=str,
-                           columns={"akarsu": "Akarsu", "barajli": "Barajlı", "biokutle": "Biokütle", "diger": "Diğer",
-                                    "dogalgaz": "Doğalgaz", "fuelOil": "Fuel Oil", "ithalKomur": "İthal Kömür",
-                                    "jeotermal": "Jeo Termal", "linyit": "Linyit", "nafta": "Nafta",
-                                    "ruzgar": "Rüzgar", "tasKomur": "Taş Kömür", "toplam": "Toplam"}, inplace=True)
-            df_kgup = df_kgup[["Tarih", "Saat", "Doğalgaz", "Barajlı", "Linyit", "Akarsu", "İthal Kömür", "Rüzgar",
-                               "Fuel Oil", "Jeo Termal", "Taş Kömür", "Biokütle", "Nafta", "Diğer", "Toplam"]]
-        except __ConnectionError:
-            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-        except __Timeout:
-            __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-        except __HTTPError as e:
-            __dogrulama.__check_http_error(e.response.status_code)
-        except __RequestException:
-            __logging.error(__param.__request_error, exc_info=False)
+            particular_url = __first_part_url + "dpp" + "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi \
+                             + "&organizationEIC=" + organizasyon_eic + "&uevcbEIC=" + uevcb_eic
+            json = __make_requests(particular_url)
+            df = __pd.DataFrame(json["body"]["dppList"])
+            df["Saat"] = df["tarih"].apply(lambda h: int(h[11:13]))
+            df["Tarih"] = __pd.to_datetime(df["tarih"].apply(lambda d: d[:10]))
+            df.rename(index=str,
+                      columns={"akarsu": "Akarsu", "barajli": "Barajlı", "biokutle": "Biokütle", "diger": "Diğer",
+                               "dogalgaz": "Doğalgaz", "fuelOil": "Fuel Oil", "ithalKomur": "İthal Kömür",
+                               "jeotermal": "Jeo Termal", "linyit": "Linyit", "nafta": "Nafta",
+                               "ruzgar": "Rüzgar", "tasKomur": "Taş Kömür", "toplam": "Toplam"}, inplace=True)
+            df = df[["Tarih", "Saat", "Doğalgaz", "Barajlı", "Linyit", "Akarsu", "İthal Kömür", "Rüzgar",
+                     "Fuel Oil", "Jeo Termal", "Taş Kömür", "Biokütle", "Nafta", "Diğer", "Toplam"]]
         except KeyError:
             return __pd.DataFrame()
         else:
-            return df_kgup
+            return df
 
 
 def tum_organizasyonlar_kgup(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
@@ -209,34 +175,23 @@ def eak(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
     """
     if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
-            resp = __requests.get(
-                __transparency_url + "aic" + "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi +
-                "&organizationEIC=" + organizasyon_eic + "&uevcbEIC=" + uevcb_eic, headers=__headers,
-                timeout=__param.__timeout)
-            resp.raise_for_status()
-            list_aic = resp.json()["body"]["aicList"]
-            df_aic = __pd.DataFrame(list_aic)
-            df_aic["Saat"] = df_aic["tarih"].apply(lambda h: int(h[11:13]))
-            df_aic["Tarih"] = __pd.to_datetime(df_aic["tarih"].apply(lambda d: d[:10]))
-            df_aic.rename(index=str,
-                          columns={"akarsu": "Akarsu", "barajli": "Barajlı", "biokutle": "Biokütle", "diger": "Diğer",
-                                   "dogalgaz": "Doğalgaz", "fuelOil": "Fuel Oil", "ithalKomur": "İthal Kömür",
-                                   "jeotermal": "Jeo Termal", "linyit": "Linyit", "nafta": "Nafta",
-                                   "ruzgar": "Rüzgar", "tasKomur": "Taş Kömür", "toplam": "Toplam"}, inplace=True)
-            df_aic = df_aic[["Tarih", "Saat", "Doğalgaz", "Barajlı", "Linyit", "Akarsu", "İthal Kömür", "Rüzgar",
-                             "Fuel Oil", "Jeo Termal", "Taş Kömür", "Biokütle", "Nafta", "Diğer", "Toplam"]]
-        except __ConnectionError:
-            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-        except __Timeout:
-            __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-        except __HTTPError as e:
-            __dogrulama.__check_http_error(e.response.status_code)
-        except __RequestException:
-            __logging.error(__param.__request_error, exc_info=False)
+            particular_url = __first_part_url + "aic" + "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi \
+                             + "&organizationEIC=" + organizasyon_eic + "&uevcbEIC=" + uevcb_eic
+            json = __make_requests(particular_url)
+            df = __pd.DataFrame(json["body"]["aicList"])
+            df["Saat"] = df["tarih"].apply(lambda h: int(h[11:13]))
+            df["Tarih"] = __pd.to_datetime(df["tarih"].apply(lambda d: d[:10]))
+            df.rename(index=str,
+                      columns={"akarsu": "Akarsu", "barajli": "Barajlı", "biokutle": "Biokütle", "diger": "Diğer",
+                               "dogalgaz": "Doğalgaz", "fuelOil": "Fuel Oil", "ithalKomur": "İthal Kömür",
+                               "jeotermal": "Jeo Termal", "linyit": "Linyit", "nafta": "Nafta",
+                               "ruzgar": "Rüzgar", "tasKomur": "Taş Kömür", "toplam": "Toplam"}, inplace=True)
+            df = df[["Tarih", "Saat", "Doğalgaz", "Barajlı", "Linyit", "Akarsu", "İthal Kömür", "Rüzgar",
+                     "Fuel Oil", "Jeo Termal", "Taş Kömür", "Biokütle", "Nafta", "Diğer", "Toplam"]]
         except KeyError:
             return __pd.DataFrame()
         else:
-            return df_aic
+            return df
 
 
 def tum_organizasyonlar_eak(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
@@ -291,34 +246,23 @@ def kudup(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
     """
     if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
-            resp = __requests.get(
-                __transparency_url + "sbfgp" + "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi +
-                "&organizationEIC=" + organizasyon_id + "&uevcbEIC=" + uevcb_id, headers=__headers,
-                timeout=__param.__timeout)
-            resp.raise_for_status()
-            list_kgup = resp.json()["body"]["dppList"]
-            df_kgup = __pd.DataFrame(list_kgup)
-            df_kgup["Saat"] = df_kgup["tarih"].apply(lambda h: int(h[11:13]))
-            df_kgup["Tarih"] = __pd.to_datetime(df_kgup["tarih"].apply(lambda d: d[:10]))
-            df_kgup.rename(index=str,
-                           columns={"akarsu": "Akarsu", "barajli": "Barajlı", "biokutle": "Biokütle", "diger": "Diğer",
-                                    "dogalgaz": "Doğalgaz", "fuelOil": "Fuel Oil", "ithalKomur": "İthal Kömür",
-                                    "jeotermal": "Jeo Termal", "linyit": "Linyit", "nafta": "Nafta",
-                                    "ruzgar": "Rüzgar", "tasKomur": "Taş Kömür", "toplam": "Toplam"}, inplace=True)
-            df_kgup = df_kgup[["Tarih", "Saat", "Doğalgaz", "Barajlı", "Linyit", "Akarsu", "İthal Kömür", "Rüzgar",
-                               "Fuel Oil", "Jeo Termal", "Taş Kömür", "Biokütle", "Nafta", "Diğer", "Toplam"]]
-        except __ConnectionError:
-            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-        except __Timeout:
-            __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-        except __HTTPError as e:
-            __dogrulama.__check_http_error(e.response.status_code)
-        except __RequestException:
-            __logging.error(__param.__request_error, exc_info=False)
+            particular_url = __first_part_url + "sbfgp" + "?startDate=" + baslangic_tarihi + "&endDate=" + \
+                             bitis_tarihi + "&organizationId=" + organizasyon_id + "&uevcbId=" + uevcb_id
+            json = __make_requests(particular_url)
+            df = __pd.DataFrame(json["body"]["dppList"])
+            df["Saat"] = df["tarih"].apply(lambda h: int(h[11:13]))
+            df["Tarih"] = __pd.to_datetime(df["tarih"].apply(lambda d: d[:10]))
+            df.rename(index=str,
+                      columns={"akarsu": "Akarsu", "barajli": "Barajlı", "biokutle": "Biokütle", "diger": "Diğer",
+                               "dogalgaz": "Doğalgaz", "fuelOil": "Fuel Oil", "ithalKomur": "İthal Kömür",
+                               "jeotermal": "Jeo Termal", "linyit": "Linyit", "nafta": "Nafta",
+                               "ruzgar": "Rüzgar", "tasKomur": "Taş Kömür", "toplam": "Toplam"}, inplace=True)
+            df = df[["Tarih", "Saat", "Doğalgaz", "Barajlı", "Linyit", "Akarsu", "İthal Kömür", "Rüzgar",
+                     "Fuel Oil", "Jeo Termal", "Taş Kömür", "Biokütle", "Nafta", "Diğer", "Toplam"]]
         except KeyError:
             return __pd.DataFrame()
         else:
-            return df_kgup
+            return df
 
 
 def uevm(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
@@ -338,37 +282,27 @@ def uevm(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
     """
     if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
-            resp = __requests.get(
-                __transparency_url + "ssv-categorized" + "?startDate=" + baslangic_tarihi +
-                "&endDate=" + bitis_tarihi, headers=__headers, timeout=__param.__timeout)
-            resp.raise_for_status()
-            list_uevm = resp.json()["body"]["ssvList"]
-            df_uevm = __pd.DataFrame(list_uevm)
-            df_uevm["Saat"] = df_uevm["date"].apply(lambda h: int(h[11:13]))
-            df_uevm["Tarih"] = __pd.to_datetime(df_uevm["date"].apply(lambda d: d[:10]))
-            df_uevm.rename(index=str,
-                           columns={"asphaltite": "Asfaltit Kömür", "river": "Akarsu", "dam": "Barajlı",
-                                    "biomass": "Biokütle", "naturalGas": "Doğalgaz", "fueloil": "Fuel Oil",
-                                    "importedCoal": "İthal Kömür", "geothermal": "Jeo Termal", "lignite": "Linyit",
-                                    "naphtha": "Nafta", "lng": "LNG", "wind": "Rüzgar", "stonecoal": "Taş Kömür",
-                                    "international": "Uluslararası", "total": "Toplam", "other": "Diğer"},
-                           inplace=True)
-            df_uevm = df_uevm[
+            particular_url = __first_part_url + "ssv-categorized" + "?startDate=" + baslangic_tarihi + "&endDate=" + \
+                             bitis_tarihi
+            json = __make_requests(particular_url)
+            df = __pd.DataFrame(json["body"]["ssvList"])
+            df["Saat"] = df["date"].apply(lambda h: int(h[11:13]))
+            df["Tarih"] = __pd.to_datetime(df["date"].apply(lambda d: d[:10]))
+            df.rename(index=str,
+                      columns={"asphaltite": "Asfaltit Kömür", "river": "Akarsu", "dam": "Barajlı",
+                               "biomass": "Biokütle", "naturalGas": "Doğalgaz", "fueloil": "Fuel Oil",
+                               "importedCoal": "İthal Kömür", "geothermal": "Jeo Termal", "lignite": "Linyit",
+                               "naphtha": "Nafta", "lng": "LNG", "wind": "Rüzgar", "stonecoal": "Taş Kömür",
+                               "international": "Uluslararası", "total": "Toplam", "other": "Diğer"},
+                      inplace=True)
+            df = df[
                 ["Tarih", "Saat", "Doğalgaz", "Barajlı", "Linyit", "Akarsu", "İthal Kömür", "Rüzgar",
                  "Fuel Oil", "Jeo Termal", "Asfaltit Kömür", "Taş Kömür", "Biokütle", "Nafta", "LNG", "Uluslararası",
                  "Diğer", "Toplam"]]
-        except __ConnectionError:
-            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-        except __Timeout:
-            __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-        except __HTTPError as e:
-            __dogrulama.__check_http_error(e.response.status_code)
-        except __RequestException:
-            __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
             return __pd.DataFrame()
         else:
-            return df_uevm
+            return df
 
 
 def gerceklesen(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
@@ -414,37 +348,27 @@ def __gerceklesen(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                  "Toplam")
     """
     try:
-        resp = __requests.get(
-            __transparency_url + "real-time-generation" + "?startDate=" + baslangic_tarihi + "&endDate="
-            + bitis_tarihi, headers=__headers, timeout=__param.__timeout)
-        resp.raise_for_status()
-        list_uretim = resp.json()["body"]["hourlyGenerations"]
-        df_uretim = __pd.DataFrame(list_uretim)
-        df_uretim["Saat"] = df_uretim["date"].apply(lambda h: int(h[11:13]))
-        df_uretim["Tarih"] = __pd.to_datetime(df_uretim["date"].apply(lambda d: d[:10]))
-        df_uretim.rename(index=str,
-                         columns={"asphaltiteCoal": "Asfaltit Kömür", "river": "Akarsu", "dammedHydro": "Barajlı",
-                                  "biomass": "Biokütle", "sun": "Güneş", "naturalGas": "Doğalgaz",
-                                  "fueloil": "Fuel Oil", "importCoal": "İthal Kömür", "geothermal": "Jeo Termal",
-                                  "lignite": "Linyit", "naphta": "Nafta", "lng": "LNG", "wind": "Rüzgar",
-                                  "blackCoal": "Taş Kömür", "importExport": "Uluslararası", "total": "Toplam"},
-                         inplace=True)
-        df_uretim = df_uretim[
+        particular_url = __first_part_url + "real-time-generation" + "?startDate=" + baslangic_tarihi + "&endDate=" \
+                         + bitis_tarihi
+        json = __make_requests(particular_url)
+        df = __pd.DataFrame(json["body"]["hourlyGenerations"])
+        df["Saat"] = df["date"].apply(lambda h: int(h[11:13]))
+        df["Tarih"] = __pd.to_datetime(df["date"].apply(lambda d: d[:10]))
+        df.rename(index=str,
+                  columns={"asphaltiteCoal": "Asfaltit Kömür", "river": "Akarsu", "dammedHydro": "Barajlı",
+                           "biomass": "Biokütle", "sun": "Güneş", "naturalGas": "Doğalgaz",
+                           "fueloil": "Fuel Oil", "importCoal": "İthal Kömür", "geothermal": "Jeo Termal",
+                           "lignite": "Linyit", "naphta": "Nafta", "lng": "LNG", "wind": "Rüzgar",
+                           "blackCoal": "Taş Kömür", "importExport": "Uluslararası", "total": "Toplam"},
+                  inplace=True)
+        df = df[
             ["Tarih", "Saat", "Doğalgaz", "Barajlı", "Linyit", "Akarsu", "İthal Kömür", "Rüzgar", "Güneş",
              "Fuel Oil", "Jeo Termal", "Asfaltit Kömür", "Taş Kömür", "Biokütle", "Nafta", "LNG", "Uluslararası",
              "Toplam"]]
-    except __ConnectionError:
-        __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-    except __Timeout:
-        __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-    except __HTTPError as e:
-        __dogrulama.__check_http_error(e.response.status_code)
-    except __RequestException:
-        __logging.error(__param.__request_error, exc_info=False)
     except KeyError:
         return __pd.DataFrame()
     else:
-        return df_uretim
+        return df
 
 
 def __santral_bazli_gerceklesen(baslangic_tarihi, bitis_tarihi, santral_id):
@@ -453,9 +377,9 @@ def __santral_bazli_gerceklesen(baslangic_tarihi, bitis_tarihi, santral_id):
 
     Parametreler
     ------------
-    baslangic_tarihi
-    bitis_tarihi
-    santral_id
+    baslangic_tarihi : %YYYY-%AA-%GG formatında başlangıç tarihi
+    bitis_tarihi     : %YYYY-%AA-%GG formatında bitiş tarihi
+    santral_id       : metin yada tam sayı formatında santral id
 
     Geri Dönüş Değeri
     -----------------
@@ -464,38 +388,27 @@ def __santral_bazli_gerceklesen(baslangic_tarihi, bitis_tarihi, santral_id):
                 "Uluslararası", "Toplam")
     """
     try:
-        resp = __requests.get(
-            __transparency_url + "real-time-generation_with_powerplant" + "?startDate=" + baslangic_tarihi +
-            "&endDate=" + bitis_tarihi + "&powerPlantId=" + str(santral_id), headers=__headers,
-            timeout=__param.__timeout)
-        resp.raise_for_status()
-        list_uretim = resp.json()["body"]["hourlyGenerations"]
-        df_uretim = __pd.DataFrame(list_uretim)
-        df_uretim["Saat"] = df_uretim["date"].apply(lambda h: int(h[11:13]))
-        df_uretim["Tarih"] = __pd.to_datetime(df_uretim["date"].apply(lambda d: d[:10]))
-        df_uretim.rename(index=str,
-                         columns={"asphaltiteCoal": "Asfaltit Kömür", "river": "Akarsu", "dammedHydro": "Barajlı",
-                                  "biomass": "Biokütle", "sun": "Güneş", "naturalGas": "Doğalgaz",
-                                  "fueloil": "Fuel Oil", "importCoal": "İthal Kömür", "geothermal": "Jeo Termal",
-                                  "lignite": "Linyit", "naphta": "Nafta", "lng": "LNG", "wind": "Rüzgar",
-                                  "blackCoal": "Taş Kömür", "importExport": "Uluslararası", "total": "Toplam"},
-                         inplace=True)
-        df_uretim = df_uretim[
+        particular_url = __first_part_url + "real-time-generation_with_powerplant" + "?startDate=" + \
+                         baslangic_tarihi + "&endDate=" + bitis_tarihi + "&powerPlantId=" + str(santral_id)
+        json = __make_requests(particular_url)
+        df = __pd.DataFrame(json["body"]["hourlyGenerations"])
+        df["Saat"] = df["date"].apply(lambda h: int(h[11:13]))
+        df["Tarih"] = __pd.to_datetime(df["date"].apply(lambda d: d[:10]))
+        df.rename(index=str,
+                  columns={"asphaltiteCoal": "Asfaltit Kömür", "river": "Akarsu", "dammedHydro": "Barajlı",
+                           "biomass": "Biokütle", "sun": "Güneş", "naturalGas": "Doğalgaz",
+                           "fueloil": "Fuel Oil", "importCoal": "İthal Kömür", "geothermal": "Jeo Termal",
+                           "lignite": "Linyit", "naphta": "Nafta", "lng": "LNG", "wind": "Rüzgar",
+                           "blackCoal": "Taş Kömür", "importExport": "Uluslararası", "total": "Toplam"},
+                  inplace=True)
+        df = df[
             ["Tarih", "Saat", "Doğalgaz", "Barajlı", "Linyit", "Akarsu", "İthal Kömür", "Rüzgar", "Güneş",
              "Fuel Oil", "Jeo Termal", "Asfaltit Kömür", "Taş Kömür", "Biokütle", "Nafta", "LNG", "Uluslararası",
              "Toplam"]]
-    except __ConnectionError:
-        __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-    except __Timeout:
-        __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-    except __HTTPError as e:
-        __dogrulama.__check_http_error(e.response.status_code)
-    except __RequestException:
-        __logging.error(__param.__request_error, exc_info=False)
     except KeyError:
         return __pd.DataFrame()
     else:
-        return df_uretim
+        return df
 
 
 def __organizasyon_cekis_birimleri(org):
@@ -505,7 +418,7 @@ def __organizasyon_cekis_birimleri(org):
 
     Parametreler
     ------------
-    eic : dict formatında organizasyon Id, Adı, EIC Kodu, Kısa Adı, Durum
+    org : dict formatında organizasyon Id, Adı, EIC Kodu, Kısa Adı, Durum
 
     Geri Dönüş Değeri
     -----------------
@@ -513,33 +426,23 @@ def __organizasyon_cekis_birimleri(org):
     UEVÇB EIC Kodu)
     """
     try:
-        resp = __requests.get(__transparency_url + "dpp-injection-unit-name?organizationEIC=" + org["EIC Kodu"],
-                              headers=__headers, timeout=__param.__timeout)
-        resp.raise_for_status()
-        list_unit = resp.json()["body"]["injectionUnitNames"]
-        df_unit = __pd.DataFrame(list_unit)
-        df_unit["Org Id"] = org["Id"]
-        df_unit["Org Adı"] = org["Adı"]
-        df_unit["Org EIC Kodu"] = org["EIC Kodu"]
-        df_unit["Org Kısa Adı"] = org["Kısa Adı"]
-        df_unit["Org Durum"] = org["Durum"]
-        df_unit.rename(index=str,
-                       columns={"id": "UEVÇB Id", "name": "UEVÇB Adı", "eic": "UEVÇB EIC Kodu"},
-                       inplace=True)
-        df_unit = df_unit[["Org Id", "Org Adı", "Org EIC Kodu", "Org Kısa Adı",
-                           "Org Durum", "UEVÇB Id", "UEVÇB Adı", "UEVÇB EIC Kodu"]]
-    except __ConnectionError:
-        __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-    except __Timeout:
-        __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-    except __HTTPError as e:
-        __dogrulama.__check_http_error(e.response.status_code)
-    except __RequestException:
-        __logging.error(__param.__request_error, exc_info=False)
+        particular_url = __first_part_url + "dpp-injection-unit-name?organizationEIC=" + org["EIC Kodu"]
+        json = __make_requests(particular_url)
+        df = __pd.DataFrame(json["body"]["injectionUnitNames"])
+        df["Org Id"] = org["Id"]
+        df["Org Adı"] = org["Adı"]
+        df["Org EIC Kodu"] = org["EIC Kodu"]
+        df["Org Kısa Adı"] = org["Kısa Adı"]
+        df["Org Durum"] = org["Durum"]
+        df.rename(index=str,
+                  columns={"id": "UEVÇB Id", "name": "UEVÇB Adı", "eic": "UEVÇB EIC Kodu"},
+                  inplace=True)
+        df = df[["Org Id", "Org Adı", "Org EIC Kodu", "Org Kısa Adı",
+                 "Org Durum", "UEVÇB Id", "UEVÇB Adı", "UEVÇB EIC Kodu"]]
     except KeyError:
         return __pd.DataFrame()
     else:
-        return df_unit
+        return df
 
 
 def __kgup(baslangic_tarihi, bitis_tarihi, org):
@@ -554,32 +457,22 @@ def __kgup(baslangic_tarihi, bitis_tarihi, org):
 
     Geri Dönüş Değeri
     -----------------
-    Tum organizasyon KGUP değerleri
+    Organizasyonel KGUP değerleri
     """
     if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
-            resp = __requests.get(
-                __transparency_url + "dpp" + "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi +
-                "&organizationEIC=" + org["EIC Kodu"], headers=__headers, timeout=__param.__timeout)
-            resp.raise_for_status()
-            list_kgup = resp.json()["body"]["dppList"]
-            df_kgup = __pd.DataFrame(list_kgup)
-            df_kgup["Saat"] = df_kgup["tarih"].apply(lambda h: int(h[11:13]))
-            df_kgup["Tarih"] = __pd.to_datetime(df_kgup["tarih"].apply(lambda d: d[:10]))
-            df_kgup.rename(index=str, columns={"toplam": org["Kısa Adı"]}, inplace=True)
-            df_kgup = df_kgup[["Tarih", "Saat", org["Kısa Adı"]]]
-        except __ConnectionError:
-            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-        except __Timeout:
-            __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-        except __HTTPError as e:
-            __dogrulama.__check_http_error(e.response.status_code)
-        except __RequestException:
-            __logging.error(__param.__request_error, exc_info=False)
+            particular_url = __first_part_url + "dpp" + "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi \
+                             + "&organizationEIC=" + org["EIC Kodu"]
+            json = __make_requests(particular_url)
+            df = __pd.DataFrame(json["body"]["dppList"])
+            df["Saat"] = df["tarih"].apply(lambda h: int(h[11:13]))
+            df["Tarih"] = __pd.to_datetime(df["tarih"].apply(lambda d: d[:10]))
+            df.rename(index=str, columns={"toplam": org["Kısa Adı"]}, inplace=True)
+            df = df[["Tarih", "Saat", org["Kısa Adı"]]]
         except KeyError:
             return __pd.DataFrame()
         else:
-            return df_kgup
+            return df
 
 
 def __eak(baslangic_tarihi, bitis_tarihi, org):
@@ -594,29 +487,19 @@ def __eak(baslangic_tarihi, bitis_tarihi, org):
 
     Geri Dönüş Değeri
     -----------------
-    Tum organizasyon EAK değerleri
+    ORganizasyonel EAK değerleri
     """
     if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
-            resp = __requests.get(
-                __transparency_url + "aic" + "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi +
-                "&organizationEIC=" + org["EIC Kodu"], headers=__headers, timeout=__param.__timeout)
-            resp.raise_for_status()
-            list_aic = resp.json()["body"]["aicList"]
-            df_aic = __pd.DataFrame(list_aic)
-            df_aic["Saat"] = df_aic["tarih"].apply(lambda h: int(h[11:13]))
-            df_aic["Tarih"] = __pd.to_datetime(df_aic["tarih"].apply(lambda d: d[:10]))
-            df_aic.rename(index=str, columns={"toplam": org["Kısa Adı"]}, inplace=True)
-            df_aic = df_aic[["Tarih", "Saat", org["Kısa Adı"]]]
-        except __ConnectionError:
-            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-        except __Timeout:
-            __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-        except __HTTPError as e:
-            __dogrulama.__check_http_error(e.response.status_code)
-        except __RequestException:
-            __logging.error(__param.__request_error, exc_info=False)
+            particular_url = __first_part_url + "aic" + "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi \
+                             + "&organizationEIC=" + org["EIC Kodu"]
+            json = __make_requests(particular_url)
+            df = __pd.DataFrame(json["body"]["aicList"])
+            df["Saat"] = df["tarih"].apply(lambda h: int(h[11:13]))
+            df["Tarih"] = __pd.to_datetime(df["tarih"].apply(lambda d: d[:10]))
+            df.rename(index=str, columns={"toplam": org["Kısa Adı"]}, inplace=True)
+            df = df[["Tarih", "Saat", org["Kısa Adı"]]]
         except KeyError:
             return __pd.DataFrame()
         else:
-            return df_aic
+            return df

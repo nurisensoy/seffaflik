@@ -1,17 +1,13 @@
-import requests as __requests
-from requests import ConnectionError as __ConnectionError
-from requests.exceptions import HTTPError as __HTTPError, RequestException as __RequestException, Timeout as __Timeout
 import pandas as __pd
 import datetime as __dt
 from dateutil import relativedelta as __rd
 from multiprocessing import Pool as __Pool
 import multiprocessing as __mp
-import logging as __logging
 
-from seffaflik.__ortak import __dogrulama as __dogrulama, __parametreler as __param, __anahtar as __api
+from seffaflik.__ortak.__araclar import make_requests as __make_requests
+from seffaflik.__ortak import __dogrulama as __dogrulama
 
-__transparency_url = __param.SEFFAFLIK_URL + "production/"
-__headers = __api.HEADERS
+__first_part_url = "production/"
 
 
 def santraller(tarih=__dt.datetime.now().strftime("%Y-%m-%d")):
@@ -28,26 +24,16 @@ def santraller(tarih=__dt.datetime.now().strftime("%Y-%m-%d")):
     """
     if __dogrulama.__tarih_dogrulama(tarih):
         try:
-            resp = __requests.get(__transparency_url + "power-plant?period=" + tarih, headers=__headers,
-                                  timeout=__param.__timeout)
-            resp.raise_for_status()
-            list_santral = resp.json()["body"]["powerPlantList"]
-            df_santral = __pd.DataFrame(list_santral)
-            df_santral.rename(index=str, columns={"id": "Id", "name": "Adı", "eic": "EIC Kodu",
-                                                  "shortName": "Kısa Adı"}, inplace=True)
-            df_santral = df_santral[["Id", "Adı", "EIC Kodu", "Kısa Adı"]]
-        except __ConnectionError:
-            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-        except __Timeout:
-            __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-        except __HTTPError as e:
-            __dogrulama.__check_http_error(e.response.status_code)
-        except __RequestException:
-            __logging.error(__param.__request_error, exc_info=False)
+            particular_url = __first_part_url + "power-plant?period=" + tarih
+            json = __make_requests(particular_url)
+            df = __pd.DataFrame(json["body"]["powerPlantList"])
+            df.rename(index=str, columns={"id": "Id", "name": "Adı", "eic": "EIC Kodu",
+                                          "shortName": "Kısa Adı"}, inplace=True)
+            df = df[["Id", "Adı", "EIC Kodu", "Kısa Adı"]]
         except KeyError:
             return __pd.DataFrame()
         else:
-            return df_santral
+            return df
 
 
 def santral_veris_cekis_birimleri(tarih=__dt.datetime.today().strftime("%Y-%m-%d"), santral_id=""):
@@ -67,25 +53,15 @@ def santral_veris_cekis_birimleri(tarih=__dt.datetime.today().strftime("%Y-%m-%d
 
     if __dogrulama.__tarih_id_dogrulama(tarih, santral_id):
         try:
-            resp = __requests.get(__transparency_url + "uevcb?period=" + tarih +
-                                  "&powerPlantId=" + str(santral_id), headers=__headers, timeout=__param.__timeout)
-            resp.raise_for_status()
-            list_unit = resp.json()["body"]["uevcbList"]
-            df_unit = __pd.DataFrame(list_unit)
-            df_unit.rename(index=str, columns={"id": "Id", "name": "Adı", "eic": "EIC Kodu"}, inplace=True)
-            df_unit = df_unit[["Id", "Adı", "EIC Kodu"]]
-        except __ConnectionError:
-            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-        except __Timeout:
-            __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-        except __HTTPError as e:
-            __dogrulama.__check_http_error(e.response.status_code)
-        except __RequestException:
-            __logging.error(__param.__request_error, exc_info=False)
+            particular_url = __first_part_url + "uevcb?period=" + tarih + "&powerPlantId=" + str(santral_id)
+            json = __make_requests(particular_url)
+            df = __pd.DataFrame(json["body"]["uevcbList"])
+            df.rename(index=str, columns={"id": "Id", "name": "Adı", "eic": "EIC Kodu"}, inplace=True)
+            df = df[["Id", "Adı", "EIC Kodu"]]
         except KeyError:
             return __pd.DataFrame()
         else:
-            return df_unit
+            return df
 
 
 def tum_santraller_veris_cekis_birimleri(tarih=__dt.datetime.today().strftime("%Y-%m-%d")):
@@ -124,26 +100,16 @@ def gercek_zamanli_uretim_yapan_santraller():
     Santral Bilgileri(Id, Adı, EIC Kodu, Kısa Adı)
     """
     try:
-        resp = __requests.get(__transparency_url + "real-time-generation-power-plant-list", headers=__headers,
-                              timeout=__param.__timeout)
-        resp.raise_for_status()
-        list_santral = resp.json()["body"]["powerPlantList"]
-        df_santral = __pd.DataFrame(list_santral)
-        df_santral.rename(index=str, columns={"id": "Id", "name": "Adı", "eic": "EIC Kodu",
-                                              "shortName": "Kısa Adı"}, inplace=True)
-        df_santral = df_santral[["Id", "Adı", "EIC Kodu", "Kısa Adı"]]
-    except __ConnectionError:
-        __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-    except __Timeout:
-        __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-    except __HTTPError as e:
-        __dogrulama.__check_http_error(e.response.status_code)
-    except __RequestException:
-        __logging.error(__param.__request_error, exc_info=False)
+        particular_url = __first_part_url + "real-time-generation-power-plant-list"
+        json = __make_requests(particular_url)
+        df = __pd.DataFrame(json["body"]["powerPlantList"])
+        df.rename(index=str, columns={"id": "Id", "name": "Adı", "eic": "EIC Kodu",
+                                      "shortName": "Kısa Adı"}, inplace=True)
+        df = df[["Id", "Adı", "EIC Kodu", "Kısa Adı"]]
     except KeyError:
         return __pd.DataFrame()
     else:
-        return df_santral
+        return df
 
 
 def yekdem_santralleri(tarih=__dt.datetime.now().strftime("%Y-%m-%d")):
@@ -160,26 +126,16 @@ def yekdem_santralleri(tarih=__dt.datetime.now().strftime("%Y-%m-%d")):
     """
     if __dogrulama.__tarih_dogrulama(tarih):
         try:
-            resp = __requests.get(__transparency_url + "renewable-sm-licensed-power-plant-list?period=" + tarih,
-                                  headers=__headers, timeout=__param.__timeout)
-            resp.raise_for_status()
-            list_santral = resp.json()["body"]["powerPlantList"]
-            df_santral = __pd.DataFrame(list_santral)
-            df_santral.rename(index=str, columns={"id": "Id", "name": "Adı", "eic": "EIC Kodu",
-                                                  "shortName": "Kısa Adı"}, inplace=True)
-            df_santral = df_santral[["Id", "Adı", "EIC Kodu", "Kısa Adı"]]
-        except __ConnectionError:
-            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-        except __Timeout:
-            __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-        except __HTTPError as e:
-            __dogrulama.__check_http_error(e.response.status_code)
-        except __RequestException:
-            __logging.error(__param.__request_error, exc_info=False)
+            particular_url = __first_part_url + "renewable-sm-licensed-power-plant-list?period=" + tarih
+            json = __make_requests(particular_url)
+            df = __pd.DataFrame(json["body"]["powerPlantList"])
+            df.rename(index=str, columns={"id": "Id", "name": "Adı", "eic": "EIC Kodu",
+                                          "shortName": "Kısa Adı"}, inplace=True)
+            df = df[["Id", "Adı", "EIC Kodu", "Kısa Adı"]]
         except KeyError:
             return __pd.DataFrame()
         else:
-            return df_santral
+            return df
 
 
 def kurulu_guc(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
@@ -220,7 +176,6 @@ def yekdem_kurulu_guc(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"
     baslangic_tarihi : %YYYY-%AA-%GG formatında başlangıç tarihi (Varsayılan: bugün)
     bitis_tarihi     : %YYYY-%AA-%GG formatında bitiş tarihi (Varsayılan: bugün)
 
-        with __Pool(__mp.cpu_count()) as p:
     Geri Dönüş Değeri
     -----------------
     Kurulu Güç Bilgisi (Tarih, Kurulu Güç)
@@ -238,53 +193,46 @@ def yekdem_kurulu_guc(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"
 
 
 def ariza_bakim_bildirimleri(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
-                             bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"), bolge_id="1"):
+                             bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d")):
     """
     İlgili tarih aralığı için santrallerin bildirmiş oldukları arıza/bakımların bilgilerini vermektedir.
 
-    Parametre
-    ----------
-    tarih : %YYYY-%AA-%GG formatında tarih (Varsayılan: bugün)
+    Parametreler
+    ------------
+    baslangic_tarihi : %YYYY-%AA-%GG formatında başlangıç tarihi (Varsayılan: bugün)
+    bitis_tarihi     : %YYYY-%AA-%GG formatında bitiş tarihi (Varsayılan: bugün)
 
     Geri Dönüş Değeri
     -----------------
-    Santral Bilgileri(Id, Adı, EIC Kodu, Kısa Adı)
+    Santral Arıza/Bakım Bildirimleri(Olay Bildirim Tarihi, Santral Adı, UEVCB Adı, Şehir, Olay Balangıç Tarihi,
+                 Olay Bitiş Tarihi, İşletmedeki Kurulu Güç, Olay Sırasında Kapasite, Yakıt Tipi, Gerekçe,
+                 Gerekçe Tipi)
     """
     if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
-            resp = __requests.get(
-                __transparency_url + "urgent-market-message" + "?startDate=" + baslangic_tarihi +
-                "&endDate=" + bitis_tarihi + "&regionId=" + bolge_id, headers=__headers, timeout=__param.__timeout)
-            resp.raise_for_status()
-            list_bildirim = resp.json()["body"]["urgentMarketMessageList"]
-            df_bildirim = __pd.DataFrame(list_bildirim)
-            df_bildirim["caseAddDate"] = __pd.to_datetime(df_bildirim["caseAddDate"])
-            df_bildirim["caseStartDate"] = __pd.to_datetime(df_bildirim["caseStartDate"])
-            df_bildirim["caseEndDate"] = __pd.to_datetime(df_bildirim["caseEndDate"])
-            df_bildirim["Gerekçe Tipi"] = df_bildirim["messageType"].map({0: "Arıza", 2: "Bakım"})
-            df_bildirim.rename(index=str,
-                               columns={"capacityAtCaseTime": "Olay Sırasında Kapasite",
-                                        "powerPlantName": "Santral Adı", "city": "Şehir",
-                                        "operatorPower": "İşletmedeki Kurulu Güç", "uevcbName": "UEVCB Adı",
-                                        "reason": "Gerekçe", "caseStartDate": "Olay Balangıç Tarihi",
-                                        "caseEndDate": "Olay Bitiş Tarihi", "caseAddDate": "Olay Bildirim Tarihi",
-                                        "fuelType": "Yakıt Tipi"}, inplace=True)
-            df_bildirim = df_bildirim[
+            particular_url = __first_part_url + "urgent-market-message" + "?startDate=" + baslangic_tarihi + \
+                             "&endDate=" + bitis_tarihi + "&regionId=1"
+            json = __make_requests(particular_url)
+            df = __pd.DataFrame(json["body"]["urgentMarketMessageList"])
+            df["caseAddDate"] = __pd.to_datetime(df["caseAddDate"])
+            df["caseStartDate"] = __pd.to_datetime(df["caseStartDate"])
+            df["caseEndDate"] = __pd.to_datetime(df["caseEndDate"])
+            df["Gerekçe Tipi"] = df["messageType"].map({0: "Arıza", 2: "Bakım"})
+            df.rename(index=str,
+                      columns={"capacityAtCaseTime": "Olay Sırasında Kapasite",
+                               "powerPlantName": "Santral Adı", "city": "Şehir",
+                               "operatorPower": "İşletmedeki Kurulu Güç", "uevcbName": "UEVCB Adı",
+                               "reason": "Gerekçe", "caseStartDate": "Olay Balangıç Tarihi",
+                               "caseEndDate": "Olay Bitiş Tarihi", "caseAddDate": "Olay Bildirim Tarihi",
+                               "fuelType": "Yakıt Tipi"}, inplace=True)
+            df = df[
                 ["Olay Bildirim Tarihi", "Santral Adı", "UEVCB Adı", "Şehir", "Olay Balangıç Tarihi",
                  "Olay Bitiş Tarihi", "İşletmedeki Kurulu Güç", "Olay Sırasında Kapasite", "Yakıt Tipi", "Gerekçe",
                  "Gerekçe Tipi"]]
-        except __ConnectionError:
-            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-        except __Timeout:
-            __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-        except __HTTPError as e:
-            __dogrulama.__check_http_error(e.response.status_code)
-        except __RequestException:
-            __logging.error(__param.__request_error, exc_info=False)
         except KeyError:
             return __pd.DataFrame()
         else:
-            return df_bildirim
+            return df
 
 
 def __kurulu_guc(tarih):
@@ -300,27 +248,17 @@ def __kurulu_guc(tarih):
     Kurulu Güç Bilgisi (Tarih, Kurulu Güç)
     """
     try:
-        resp = __requests.get(__transparency_url + "installed-capacity?period=" + tarih, headers=__headers,
-                              timeout=__param.__timeout)
-        resp.raise_for_status()
-        list_guc = resp.json()["body"]["installedCapacityList"]
-        df_guc = __pd.DataFrame(list_guc)
-        df_guc = df_guc[df_guc["capacityType"] == "ALL"]
-        df_guc.insert(loc=0, column="Tarih", value=__pd.to_datetime(tarih))
-        df_guc.rename(index=str, columns={"capacity": "Kurulu Güç"}, inplace=True)
-        df_guc = df_guc[["Tarih", "Kurulu Güç"]]
-    except __ConnectionError:
-        __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-    except __Timeout:
-        __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-    except __HTTPError as e:
-        __dogrulama.__check_http_error(e.response.status_code)
-    except __RequestException:
-        __logging.error(__param.__request_error, exc_info=False)
+        particular_url = __first_part_url + "installed-capacity?period=" + tarih
+        json = __make_requests(particular_url)
+        df = __pd.DataFrame(json["body"]["installedCapacityList"])
+        df = df[df["capacityType"] == "ALL"]
+        df.insert(loc=0, column="Tarih", value=__pd.to_datetime(tarih))
+        df.rename(index=str, columns={"capacity": "Kurulu Güç"}, inplace=True)
+        df = df[["Tarih", "Kurulu Güç"]]
     except KeyError:
         return __pd.DataFrame()
     else:
-        return df_guc
+        return df
 
 
 def __yekdem_kurulu_guc(tarih):
@@ -337,28 +275,18 @@ def __yekdem_kurulu_guc(tarih):
     Kurulu Güç Bilgisi (Tarih, Kurulu Güç)
     """
     try:
-        resp = __requests.get(__transparency_url + "installed-capacity-of-renewable?period=" + tarih, headers=__headers,
-                              timeout=__param.__timeout)
-        resp.raise_for_status()
-        list_guc = resp.json()["body"]["installedCapacityOfRenewableList"]
-        df_guc = __pd.DataFrame(list_guc)
-        columns = df_guc["capacityType"].values
-        df_guc = df_guc[["capacity"]].transpose()
-        df_guc.set_axis(columns, axis=1, inplace=True)
-        df_guc.reset_index(drop=True, inplace=True)
-        df_guc.insert(loc=0, column="Tarih", value=__pd.to_datetime(tarih))
-    except __ConnectionError:
-        __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-    except __Timeout:
-        __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-    except __HTTPError as e:
-        __dogrulama.__check_http_error(e.response.status_code)
-    except __RequestException:
-        __logging.error(__param.__request_error, exc_info=False)
+        particular_url = __first_part_url + "installed-capacity-of-renewable?period=" + tarih
+        json = __make_requests(particular_url)
+        df = __pd.DataFrame(json["body"]["installedCapacityOfRenewableList"])
+        columns = df["capacityType"].values
+        df = df[["capacity"]].transpose()
+        df.set_axis(columns, axis=1, inplace=True)
+        df.reset_index(drop=True, inplace=True)
+        df.insert(loc=0, column="Tarih", value=__pd.to_datetime(tarih))
     except KeyError:
         return __pd.DataFrame()
     else:
-        return df_guc
+        return df
 
 
 def __santral_veris_cekis_birimleri(tarih, santral):
@@ -378,29 +306,19 @@ def __santral_veris_cekis_birimleri(tarih, santral):
    """
 
     try:
-        resp = __requests.get(__transparency_url + "uevcb?period=" + tarih +
-                              "&powerPlantId=" + str(santral["Id"]), headers=__headers, timeout=__param.__timeout)
-        resp.raise_for_status()
-        list_unit = resp.json()["body"]["uevcbList"]
-        df_unit = __pd.DataFrame(list_unit)
-        df_unit["Santral Id"] = santral["Id"]
-        df_unit["Santral Adı"] = santral["Adı"]
-        df_unit["Santral EIC Kodu"] = santral["EIC Kodu"]
-        df_unit["Santral Kısa Adı"] = santral["Kısa Adı"]
-        df_unit.rename(index=str,
-                       columns={"id": "UEVÇB Id", "name": "UEVÇB Adı", "eic": "UEVÇB EIC Kodu"},
-                       inplace=True)
-        df_unit = df_unit[["Santral Id", "Santral Adı", "Santral EIC Kodu", "Santral Kısa Adı", "UEVÇB Id",
-                           "UEVÇB Adı", "UEVÇB EIC Kodu"]]
-    except __ConnectionError:
-        __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-    except __Timeout:
-        __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-    except __HTTPError as e:
-        __dogrulama.__check_http_error(e.response.status_code)
-    except __RequestException:
-        __logging.error(__param.__request_error, exc_info=False)
+        particular_url = __first_part_url + "uevcb?period=" + tarih + "&powerPlantId=" + str(santral["Id"])
+        json = __make_requests(particular_url)
+        df = __pd.DataFrame(json["body"]["uevcbList"])
+        df["Santral Id"] = santral["Id"]
+        df["Santral Adı"] = santral["Adı"]
+        df["Santral EIC Kodu"] = santral["EIC Kodu"]
+        df["Santral Kısa Adı"] = santral["Kısa Adı"]
+        df.rename(index=str,
+                  columns={"id": "UEVÇB Id", "name": "UEVÇB Adı", "eic": "UEVÇB EIC Kodu"},
+                  inplace=True)
+        df = df[["Santral Id", "Santral Adı", "Santral EIC Kodu", "Santral Kısa Adı", "UEVÇB Id",
+                 "UEVÇB Adı", "UEVÇB EIC Kodu"]]
     except KeyError:
         return __pd.DataFrame()
     else:
-        return df_unit
+        return df

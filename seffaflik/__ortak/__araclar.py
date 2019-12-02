@@ -1,4 +1,12 @@
+import requests as __requests
+from requests import ConnectionError as __ConnectionError
+from requests.exceptions import HTTPError as __HTTPError, RequestException as __RequestException, Timeout as __Timeout
 import pandas as __pd
+import logging as __logging
+from seffaflik.__ortak.__anahtar import HEADERS
+from seffaflik.__ortak.__dogrulama import __check_http_error
+from seffaflik.__ortak.__parametreler import __timeout, __requestsConnectionErrorLogging, \
+    __requestsTimeoutErrorLogging, __request_error
 
 
 def __merge_ia_dfs_evenif_empty(df_arz, df_talep):
@@ -32,24 +40,21 @@ def __merge_ia_dfs_evenif_empty(df_arz, df_talep):
     return df
 
 
-def __change_df_eic_column_names_with_short_names(df, org):
-    """
-    This method changes the EIC column names with short names.
-
-    Parameters
-    ----------
-    df  : DataFrame
-    org: organizasyon isim ve eic değerleri
-
-    Return
-    ------
-    Data Frame
-    """
-    new_column_names = []
-    for eic in df.columns[2:]:
-        short_name = org[org["EIC Kodu"] == eic]["Kısa Adı"].values[0]
-        new_column_names.append(short_name)
-    new_column_names.insert(0, "Saat")
-    new_column_names.insert(0, "Tarih")
-    df.columns = new_column_names
-    return df
+def make_requests(corresponding_url):
+    main_url = "https://api.epias.com.tr/epias/exchange/transparency/"
+    try:
+        resp = __requests.get(main_url + corresponding_url, headers=HEADERS, timeout=__timeout)
+        resp.raise_for_status()
+        json = resp.json()
+    except __ConnectionError:
+        __logging.error(__requestsConnectionErrorLogging, exc_info=False)
+    except __Timeout:
+        __logging.error(__requestsTimeoutErrorLogging, exc_info=False)
+    except __HTTPError as e:
+        __check_http_error(e.response.status_code)
+    except __RequestException:
+        __logging.error(__request_error, exc_info=False)
+    except KeyError:
+        return __pd.DataFrame()
+    else:
+        return json

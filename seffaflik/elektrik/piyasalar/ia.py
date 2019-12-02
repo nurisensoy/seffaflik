@@ -1,6 +1,3 @@
-import requests as __requests
-from requests import ConnectionError as __ConnectionError
-from requests.exceptions import HTTPError as __HTTPError, RequestException as __RequestException, Timeout as __Timeout
 import pandas as __pd
 import datetime as __dt
 from multiprocessing import Pool as __Pool
@@ -8,11 +5,11 @@ import multiprocessing as __mp
 from functools import reduce as __red
 import logging as __logging
 
-from seffaflik.__ortak import __araclar as __araclar, __dogrulama as __dogrulama, __parametreler as __param, __anahtar as __api
+from seffaflik.__ortak.__araclar import make_requests as __make_requests
+from seffaflik.__ortak import __araclar as __araclar, __dogrulama as __dogrulama
 from seffaflik.elektrik.uretim import organizasyonlar as __organizasyonlar
 
-__transparency_url = __param.SEFFAFLIK_URL + "market/"
-__headers = __api.HEADERS
+__first_part_url = "market/"
 
 
 def hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
@@ -33,34 +30,24 @@ def hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
     """
     if __dogrulama.__baslangic_bitis_tarih_eic_dogrulama(baslangic_tarihi, bitis_tarihi, organizasyon_eic):
         try:
-            resp = __requests.get(__transparency_url + "bilateral-contract-sell" +
-                                  "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi + "&eic=" +
-                                  organizasyon_eic, headers=__headers, timeout=__param.__timeout)
-            resp.raise_for_status()
-            list_arz = resp.json()["body"]["bilateralContractSellList"]
-            resp = __requests.get(__transparency_url + "bilateral-contract-buy" +
-                                  "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi + "&eic=" +
-                                  organizasyon_eic, headers=__headers, timeout=__param.__timeout)
-            resp.raise_for_status()
-            list_talep = resp.json()["body"]["bilateralContractBuyList"]
-            df_arz = __pd.DataFrame(list_arz)
-            df_talep = __pd.DataFrame(list_talep)
-            df_hacim = __araclar.__merge_ia_dfs_evenif_empty(df_arz, df_talep)
-            df_hacim["Saat"] = df_hacim["date"].apply(lambda h: int(h[11:13]))
-            df_hacim["Tarih"] = __pd.to_datetime(df_hacim["date"].apply(lambda d: d[:10]))
-            df_hacim = df_hacim[["Tarih", "Saat", "Talep Miktarı", "Arz Miktarı"]]
-        except __ConnectionError:
-            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-        except __Timeout:
-            __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-        except __HTTPError as e:
-            __dogrulama.__check_http_error(e.response.status_code)
-        except __RequestException:
-            __logging.error(__param.__request_error, exc_info=False)
+            particular_url = \
+                __first_part_url + "bilateral-contract-sell" + "?startDate=" + baslangic_tarihi + "&endDate=" + \
+                bitis_tarihi + "&eic=" + organizasyon_eic
+            json = __make_requests(particular_url)
+            df_arz = __pd.DataFrame(json["body"]["bilateralContractSellList"])
+            particular_url = \
+                __first_part_url + "bilateral-contract-buy" + "?startDate=" + baslangic_tarihi + "&endDate=" + \
+                bitis_tarihi + "&eic=" + organizasyon_eic
+            json = __make_requests(particular_url)
+            df_talep = __pd.DataFrame(json["body"]["bilateralContractBuyList"])
+            df = __araclar.__merge_ia_dfs_evenif_empty(df_arz, df_talep)
+            df["Saat"] = df["date"].apply(lambda h: int(h[11:13]))
+            df["Tarih"] = __pd.to_datetime(df["date"].apply(lambda d: d[:10]))
+            df = df[["Tarih", "Saat", "Talep Miktarı", "Arz Miktarı"]]
         except KeyError:
             return __pd.DataFrame()
         else:
-            return df_hacim
+            return df
 
 
 def tum_organizasyonlar_hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
@@ -79,7 +66,7 @@ def tum_organizasyonlar_hacim(baslangic_tarihi=__dt.datetime.today().strftime("%
     Tüm Organizasyonların İA Hacim Bilgileri (Tarih, Saat, Hacim)
     """
     if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
-        list_org = __organizasyonlar()[["EIC Kodu", "Kısa Adı"]].to_dict("records")[:100]
+        list_org = __organizasyonlar()[["EIC Kodu", "Kısa Adı"]].to_dict("records")
         org_len = len(list_org)
         list_date_org_eic = list(zip([baslangic_tarihi] * org_len, [bitis_tarihi] * org_len, list_org))
         list_date_org_eic = list(map(list, list_date_org_eic))
@@ -117,35 +104,26 @@ def __organizasyonel_net_hacim(baslangic_tarihi, bitis_tarihi, org):
     Net İA Miktarı (MWh)
     """
     try:
-        resp = __requests.get(__transparency_url + "bilateral-contract-sell" +
-                              "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi + "&eic=" + org["EIC Kodu"],
-                              headers=__headers, timeout=__param.__timeout)
-        resp.raise_for_status()
-        list_arz = resp.json()["body"]["bilateralContractSellList"]
-        resp = __requests.get(__transparency_url + "bilateral-contract-buy" +
-                              "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi + "&eic=" + org["EIC Kodu"],
-                              headers=__headers, timeout=__param.__timeout)
-        resp.raise_for_status()
-        list_talep = resp.json()["body"]["bilateralContractBuyList"]
-        df_arz = __pd.DataFrame(list_arz)
-        df_talep = __pd.DataFrame(list_talep)
-        df_hacim = __araclar.__merge_ia_dfs_evenif_empty(df_arz, df_talep)
-        df_hacim["Saat"] = df_hacim["date"].apply(lambda h: int(h[11:13]))
-        df_hacim["Tarih"] = __pd.to_datetime(df_hacim["date"].apply(lambda d: d[:10]))
-        df_hacim[org["Kısa Adı"]] = df_hacim["Talep Miktarı"] - df_hacim["Arz Miktarı"]
-        df_hacim = df_hacim[["Tarih", "Saat", org["Kısa Adı"]]]
-    except __ConnectionError:
-        __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-    except __Timeout:
-        __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-    except __HTTPError as e:
-        __dogrulama.__check_http_error(e.response.status_code)
-    except __RequestException:
-        __logging.error(__param.__request_error, exc_info=False)
+        particular_url = \
+            __first_part_url + "bilateral-contract-sell" + "?startDate=" + baslangic_tarihi + "&endDate=" + \
+            bitis_tarihi + "&eic=" + org["EIC Kodu"]
+        json = __make_requests(particular_url)
+        df_arz = __pd.DataFrame(json["body"]["bilateralContractSellList"])
+
+        particular_url = \
+            __first_part_url + "bilateral-contract-buy" + "?startDate=" + baslangic_tarihi + "&endDate=" + \
+            bitis_tarihi + "&eic=" + org["EIC Kodu"]
+        json = __make_requests(particular_url)
+        df_talep = __pd.DataFrame(json["body"]["bilateralContractBuyList"])
+        df = __araclar.__merge_ia_dfs_evenif_empty(df_arz, df_talep)
+        df["Saat"] = df["date"].apply(lambda h: int(h[11:13]))
+        df["Tarih"] = __pd.to_datetime(df["date"].apply(lambda d: d[:10]))
+        df[org["Kısa Adı"]] = df["Talep Miktarı"] - df["Arz Miktarı"]
+        df = df[["Tarih", "Saat", org["Kısa Adı"]]]
     except KeyError:
         return __pd.DataFrame()
     else:
-        return df_hacim
+        return df
 
 
 def __organizasyonel_arz_hacim(baslangic_tarihi, bitis_tarihi, org):
@@ -167,28 +145,18 @@ def __organizasyonel_arz_hacim(baslangic_tarihi, bitis_tarihi, org):
     Arz İA Miktarı (MWh)
     """
     try:
-        resp = __requests.get(__transparency_url + "bilateral-contract-sell" +
-                              "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi + "&eic=" + org["EIC Kodu"],
-                              headers=__headers, timeout=__param.__timeout)
-        resp.raise_for_status()
-        list_arz = resp.json()["body"]["bilateralContractSellList"]
-        df_arz = __pd.DataFrame(list_arz)
-        df_arz["Saat"] = df_arz["date"].apply(lambda h: int(h[11:13]))
-        df_arz["Tarih"] = __pd.to_datetime(df_arz["date"].apply(lambda d: d[:10]))
-        df_arz.rename(index=str, columns={"quantity": org["Kısa Adı"]}, inplace=True)
-        df_arz = df_arz[["Tarih", "Saat", org["Kısa Adı"]]]
-    except __ConnectionError:
-        __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-    except __Timeout:
-        __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-    except __HTTPError as e:
-        __dogrulama.__check_http_error(e.response.status_code)
-    except __RequestException:
-        __logging.error(__param.__request_error, exc_info=False)
+        particular_url = __first_part_url + "bilateral-contract-sell" + "?startDate=" + baslangic_tarihi + "&endDate=" \
+                         + bitis_tarihi + "&eic=" + org["EIC Kodu"]
+        json = __make_requests(particular_url)
+        df = __pd.DataFrame(json["body"]["bilateralContractSellList"])
+        df["Saat"] = df["date"].apply(lambda h: int(h[11:13]))
+        df["Tarih"] = __pd.to_datetime(df["date"].apply(lambda d: d[:10]))
+        df.rename(index=str, columns={"quantity": org["Kısa Adı"]}, inplace=True)
+        df = df[["Tarih", "Saat", org["Kısa Adı"]]]
     except KeyError:
         return __pd.DataFrame()
     else:
-        return df_arz
+        return df
 
 
 def __organizasyonel_talep_hacim(baslangic_tarihi, bitis_tarihi, org):
@@ -210,25 +178,15 @@ def __organizasyonel_talep_hacim(baslangic_tarihi, bitis_tarihi, org):
     Talep İA Miktarı (MWh)
     """
     try:
-        resp = __requests.get(__transparency_url + "bilateral-contract-buy" +
-                              "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi + "&eic=" + org["EIC Kodu"],
-                              headers=__headers, timeout=__param.__timeout)
-        resp.raise_for_status()
-        list_talep = resp.json()["body"]["bilateralContractBuyList"]
-        df_talep = __pd.DataFrame(list_talep)
-        df_talep["Saat"] = df_talep["date"].apply(lambda h: int(h[11:13]))
-        df_talep["Tarih"] = __pd.to_datetime(df_talep["date"].apply(lambda d: d[:10]))
-        df_talep.rename(index=str, columns={"quantity": org["Kısa Adı"]}, inplace=True)
-        df_talep = df_talep[["Tarih", "Saat", org["Kısa Adı"]]]
-    except __ConnectionError:
-        __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-    except __Timeout:
-        __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-    except __HTTPError as e:
-        __dogrulama.__check_http_error(e.response.status_code)
-    except __RequestException:
-        __logging.error(__param.__request_error, exc_info=False)
+        particular_url = __first_part_url + "bilateral-contract-buy" + "?startDate=" + baslangic_tarihi + "&endDate=" \
+                         + bitis_tarihi + "&eic=" + org["EIC Kodu"]
+        json = __make_requests(particular_url)
+        df = __pd.DataFrame(json["body"]["bilateralContractBuyList"])
+        df["Saat"] = df["date"].apply(lambda h: int(h[11:13]))
+        df["Tarih"] = __pd.to_datetime(df["date"].apply(lambda d: d[:10]))
+        df.rename(index=str, columns={"quantity": org["Kısa Adı"]}, inplace=True)
+        df = df[["Tarih", "Saat", org["Kısa Adı"]]]
     except KeyError:
         return __pd.DataFrame()
     else:
-        return df_talep
+        return df

@@ -1,18 +1,14 @@
-import requests as __requests
-from requests import ConnectionError as __ConnectionError
-from requests.exceptions import HTTPError as __HTTPError, RequestException as __RequestException, Timeout as __Timeout
 import pandas as __pd
 import datetime as __dt
 from dateutil import relativedelta as __rd
 from multiprocessing import Pool as __Pool
 import multiprocessing as __mp
 from functools import reduce as __red
-import logging as __logging
 
-from seffaflik.__ortak import __dogrulama as __dogrulama, __parametreler as __param, __anahtar as __api
+from seffaflik.__ortak.__araclar import make_requests as __make_requests
+from seffaflik.__ortak import __dogrulama as __dogrulama
 
-__transparency_url = __param.SEFFAFLIK_URL + "consumption/"
-__headers = __api.HEADERS
+__first_part_url = "consumption/"
 
 
 def sehir():
@@ -28,25 +24,15 @@ def sehir():
 
     """
     try:
-        resp = __requests.get(
-            __transparency_url + "city", headers=__headers, timeout=__param.__timeout)
-        resp.raise_for_status()
-        list_sehir = resp.json()["body"]["cityList"]
-        df_sehir = __pd.DataFrame(list_sehir)
-        df_sehir.rename(index=str, columns={"cityId": "Şehir Id", "districtId": "İlçe Id", "cityName": "Şehir İsmi",
-                                            "districtName": "İlçe İsmi"}, inplace=True)
-    except __ConnectionError:
-        __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-    except __Timeout:
-        __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-    except __HTTPError as e:
-        __dogrulama.__check_http_error(e.response.status_code)
-    except __RequestException:
-        __logging.error(__param.__request_error, exc_info=False)
+        particular_url = __first_part_url + "city"
+        json = __make_requests(particular_url)
+        df = __pd.DataFrame(json["body"]["cityList"])
+        df.rename(index=str, columns={"cityId": "Şehir Id", "districtId": "İlçe Id", "cityName": "Şehir İsmi",
+                                      "districtName": "İlçe İsmi"}, inplace=True)
     except KeyError:
         return __pd.DataFrame()
     else:
-        return df_sehir.drop_duplicates().reset_index(drop=True)
+        return df.drop_duplicates().reset_index(drop=True)
 
 
 def gerceklesen(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
@@ -66,28 +52,18 @@ def gerceklesen(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
     """
     if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
-            resp = __requests.get(
-                __transparency_url + "real-time-consumption" + "?startDate=" + baslangic_tarihi +
-                "&endDate=" + bitis_tarihi, headers=__headers, timeout=__param.__timeout)
-            resp.raise_for_status()
-            list_tuketim = resp.json()["body"]["hourlyConsumptions"]
-            df_tuketim = __pd.DataFrame(list_tuketim)
-            df_tuketim["Saat"] = df_tuketim["date"].apply(lambda h: int(h[11:13]))
-            df_tuketim["Tarih"] = __pd.to_datetime(df_tuketim["date"].apply(lambda d: d[:10]))
-            df_tuketim.rename(index=str, columns={"consumption": "Tüketim"}, inplace=True)
-            df_tuketim = df_tuketim[["Tarih", "Saat", "Tüketim"]]
-        except __ConnectionError:
-            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-        except __Timeout:
-            __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-        except __HTTPError as e:
-            __dogrulama.__check_http_error(e.response.status_code)
-        except __RequestException:
-            __logging.error(__param.__request_error, exc_info=False)
+            particular_url = __first_part_url + "real-time-consumption" + "?startDate=" + baslangic_tarihi + \
+                             "&endDate=" + bitis_tarihi
+            json = __make_requests(particular_url)
+            df = __pd.DataFrame(json["body"]["hourlyConsumptions"])
+            df["Saat"] = df["date"].apply(lambda h: int(h[11:13]))
+            df["Tarih"] = __pd.to_datetime(df["date"].apply(lambda d: d[:10]))
+            df.rename(index=str, columns={"consumption": "Tüketim"}, inplace=True)
+            df = df[["Tarih", "Saat", "Tüketim"]]
         except KeyError:
             return __pd.DataFrame()
         else:
-            return df_tuketim
+            return df
 
 
 def uecm(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
@@ -107,28 +83,17 @@ def uecm(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
     """
     if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
-            resp = __requests.get(
-                __transparency_url + "swv" + "?startDate=" + baslangic_tarihi +
-                "&endDate=" + bitis_tarihi, headers=__headers, timeout=__param.__timeout)
-            resp.raise_for_status()
-            list_uecm = resp.json()["body"]["swvList"]
-            df_uecm = __pd.DataFrame(list_uecm)
-            df_uecm["Saat"] = df_uecm["date"].apply(lambda h: int(h[11:13]))
-            df_uecm["Tarih"] = __pd.to_datetime(df_uecm["date"].apply(lambda d: d[:10]))
-            df_uecm.rename(index=str, columns={"swv": "UEÇM"}, inplace=True)
-            df_uecm = df_uecm[["Tarih", "Saat", "UEÇM"]]
-        except __ConnectionError:
-            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-        except __Timeout:
-            __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-        except __HTTPError as e:
-            __dogrulama.__check_http_error(e.response.status_code)
-        except __RequestException:
-            __logging.error(__param.__request_error, exc_info=False)
+            particular_url = __first_part_url + "swv" + "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi
+            json = __make_requests(particular_url)
+            df = __pd.DataFrame(json["body"]["swvList"])
+            df["Saat"] = df["date"].apply(lambda h: int(h[11:13]))
+            df["Tarih"] = __pd.to_datetime(df["date"].apply(lambda d: d[:10]))
+            df.rename(index=str, columns={"swv": "UEÇM"}, inplace=True)
+            df = df[["Tarih", "Saat", "UEÇM"]]
         except KeyError:
             return __pd.DataFrame()
         else:
-            return df_uecm
+            return df
 
 
 def uecm_donemlik(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
@@ -231,28 +196,18 @@ def tahmin(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
     """
     if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
-            resp = __requests.get(
-                __transparency_url + "load-estimation-plan" + "?startDate=" + baslangic_tarihi +
-                "&endDate=" + bitis_tarihi, headers=__headers, timeout=__param.__timeout)
-            resp.raise_for_status()
-            list_tuketim = resp.json()["body"]["loadEstimationPlanList"]
-            df_tuketim = __pd.DataFrame(list_tuketim)
-            df_tuketim["Saat"] = df_tuketim["date"].apply(lambda h: int(h[11:13]))
-            df_tuketim["Tarih"] = __pd.to_datetime(df_tuketim["date"].apply(lambda d: d[:10]))
-            df_tuketim.rename(index=str, columns={"lep": "Tüketim"}, inplace=True)
-            df_tuketim = df_tuketim[["Tarih", "Saat", "Tüketim"]]
-        except __ConnectionError:
-            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-        except __Timeout:
-            __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-        except __HTTPError as e:
-            __dogrulama.__check_http_error(e.response.status_code)
-        except __RequestException:
-            __logging.error(__param.__request_error, exc_info=False)
+            particular_url = __first_part_url + "load-estimation-plan" + "?startDate=" + baslangic_tarihi + \
+                             "&endDate=" + bitis_tarihi
+            json = __make_requests(particular_url)
+            df = __pd.DataFrame(json["body"]["loadEstimationPlanList"])
+            df["Saat"] = df["date"].apply(lambda h: int(h[11:13]))
+            df["Tarih"] = __pd.to_datetime(df["date"].apply(lambda d: d[:10]))
+            df.rename(index=str, columns={"lep": "Tüketim"}, inplace=True)
+            df = df[["Tarih", "Saat", "Tüketim"]]
         except KeyError:
             return __pd.DataFrame()
         else:
-            return df_tuketim
+            return df
 
 
 def serbest_tuketici_sayisi(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
@@ -298,27 +253,16 @@ def sayac_okuyan_kurum(tarih=__dt.datetime.today().strftime("%Y-%m-%d")):
     """
     if __dogrulama.__tarih_dogrulama(tarih):
         try:
-            resp = __requests.get(__transparency_url + "meter-reading-company" + "?period=" + tarih, headers=__headers,
-                                  timeout=__param.__timeout)
-            resp.raise_for_status()
-            list_kurum = resp.json()["body"]["meterReadingCompanyList"]
-            df_kurum = __pd.DataFrame(list_kurum)
-            df_kurum.rename(index=str,
-                            columns={"id": "Id", "name": "Şirket Adı",
-                                     "status": "Durum"},
-                            inplace=True)
-        except __ConnectionError:
-            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-        except __Timeout:
-            __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-        except __HTTPError as e:
-            __dogrulama.__check_http_error(e.response.status_code)
-        except __RequestException:
-            __logging.error(__param.__request_error, exc_info=False)
+            particular_url = __first_part_url + "meter-reading-company" + "?period=" + tarih
+            json = __make_requests(particular_url)
+            df = __pd.DataFrame(json["body"]["meterReadingCompanyList"])
+            df.rename(index=str,
+                      columns={"id": "Id", "name": "Şirket Adı", "status": "Durum"},
+                      inplace=True)
         except KeyError:
             return __pd.DataFrame()
         else:
-            return df_kurum
+            return df
 
 
 def dagitim_bolgeleri():
@@ -333,25 +277,14 @@ def dagitim_bolgeleri():
     Dağıtım Bölgeleri (Id, Dağıtım Bölgesi)
     """
     try:
-        resp = __requests.get(__transparency_url + "distribution", headers=__headers)
-        resp.raise_for_status()
-        list_dagitim = resp.json()["body"]["distributionList"]
-        df_dagitim = __pd.DataFrame(list_dagitim)
-        df_dagitim.rename(index=str,
-                          columns={"id": "Id", "name": "Dağıtım Şirket Adı"},
-                          inplace=True)
-    except __ConnectionError:
-        __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-    except __Timeout:
-        __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-    except __HTTPError as e:
-        __dogrulama.__check_http_error(e.response.status_code)
-    except __RequestException:
-        __logging.error(__param.__request_error, exc_info=False)
+        particular_url = __first_part_url + "distribution"
+        json = __make_requests(particular_url)
+        df = __pd.DataFrame(json["body"]["distributionList"])
+        df.rename(index=str, columns={"id": "Id", "name": "Dağıtım Şirket Adı"}, inplace=True)
     except KeyError:
         return __pd.DataFrame()
     else:
-        return df_dagitim
+        return df
 
 
 def profil_abone_grubu(tarih=__dt.datetime.today().strftime("%Y-%m-%d"), distribution_id=""):
@@ -370,27 +303,15 @@ def profil_abone_grubu(tarih=__dt.datetime.today().strftime("%Y-%m-%d"), distrib
     """
     if __dogrulama.__tarih_dogrulama(tarih):
         try:
-            resp = __requests.get(
-                __transparency_url + "subscriber-profile-group" + "?period=" + tarih + "&distributionId=" +
-                str(distribution_id), headers=__headers, timeout=__param.__timeout)
-            resp.raise_for_status()
-            list_profil = resp.json()["body"]["subscriberProfileGroupList"]
-            df_profil = __pd.DataFrame(list_profil)
-            df_profil.rename(index=str,
-                             columns={"id": "Id", "name": "Profil Adı"},
-                             inplace=True)
-        except __ConnectionError:
-            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-        except __Timeout:
-            __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-        except __HTTPError as e:
-            __dogrulama.__check_http_error(e.response.status_code)
-        except __RequestException:
-            __logging.error(__param.__request_error, exc_info=False)
+            particular_url = __first_part_url + "subscriber-profile-group" + "?period=" + tarih + "&distributionId=" \
+                             + str(distribution_id)
+            json = __make_requests(particular_url)
+            df = __pd.DataFrame(json["body"]["subscriberProfileGroupList"])
+            df.rename(index=str, columns={"id": "Id", "name": "Profil Adı"}, inplace=True)
         except KeyError:
             return __pd.DataFrame()
         else:
-            return df_profil
+            return df
 
 
 def tum_dagitimlar_profil_gruplari(tarih=__dt.datetime.today().strftime("%Y-%m-%d")):
@@ -414,7 +335,7 @@ def tum_dagitimlar_profil_gruplari(tarih=__dt.datetime.today().strftime("%Y-%m-%
         list_date_dist = list(zip([tarih] * org_len, list_dist))
         list_date_dist = list(map(list, list_date_dist))
         with __Pool(__mp.cpu_count()) as p:
-            list_df_unit = p.starmap(profil_gruplari, list_date_dist, chunksize=1)
+            list_df_unit = p.starmap(profil_abone_grubu, list_date_dist, chunksize=1)
         list_df_unit = list(filter(lambda x: len(x) > 0, list_df_unit))
         df_unit = __red(lambda left, right: __pd.merge(left, right, how="outer", on=["Id"], sort=True),
                         list_df_unit)
@@ -434,25 +355,14 @@ def sayac_okuma_tipi():
     Sayaç Okuma Tipleri (Id, Dağıtım Bölgesi)
     """
     try:
-        resp = __requests.get(__transparency_url + "meter-reading-type", headers=__headers)
-        resp.raise_for_status()
-        list_sayac = resp.json()["body"]["meterReadingTypeList"]
-        df_sayac = __pd.DataFrame(list_sayac)
-        df_sayac.rename(index=str,
-                        columns={"id": "Id", "name": "Sayaç Tipi"},
-                        inplace=True)
-    except __ConnectionError:
-        __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-    except __Timeout:
-        __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-    except __HTTPError as e:
-        __dogrulama.__check_http_error(e.response.status_code)
-    except __RequestException:
-        __logging.error(__param.__request_error, exc_info=False)
+        particular_url = __first_part_url + "meter-reading-type"
+        json = __make_requests(particular_url)
+        df = __pd.DataFrame(json["body"]["meterReadingTypeList"])
+        df.rename(index=str, columns={"id": "Id", "name": "Sayaç Tipi"}, inplace=True)
     except KeyError:
         return __pd.DataFrame()
     else:
-        return df_sayac
+        return df
 
 
 def __uecm_donemlik(tarih=__dt.datetime.today().strftime("%Y-%m-%d")):
@@ -472,30 +382,19 @@ def __uecm_donemlik(tarih=__dt.datetime.today().strftime("%Y-%m-%d")):
     """
     if __dogrulama.__tarih_dogrulama(tarih):
         try:
-            resp = __requests.get(__transparency_url + "consumption" + "?period=" + tarih, headers=__headers,
-                                  timeout=__param.__timeout)
-            resp.raise_for_status()
-            list_uecm = resp.json()["body"]["consumptions"]
-            df_uecm = __pd.DataFrame(list_uecm)
-            df_uecm["Dönem"] = df_uecm["period"].apply(lambda d: d[:7])
-            df_uecm.rename(index=str,
-                           columns={"consumption": "UEÇM", "eligibleCustomerConsumption": "Serbest Tüketici UEÇM",
-                                    "underSupplyLiabilityConsumption": "Tedarik Yükümlülüğü Kapsamındaki UEÇM"},
-                           inplace=True)
-            df_uecm = df_uecm[
-                ["Dönem", "UEÇM", "Serbest Tüketici UEÇM", "Tedarik Yükümlülüğü Kapsamındaki UEÇM"]]
-        except __ConnectionError:
-            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-        except __Timeout:
-            __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-        except __HTTPError as e:
-            __dogrulama.__check_http_error(e.response.status_code)
-        except __RequestException:
-            __logging.error(__param.__request_error, exc_info=False)
+            particular_url = __first_part_url + "consumption" + "?period=" + tarih
+            json = __make_requests(particular_url)
+            df = __pd.DataFrame(json["body"]["consumptions"])
+            df["Dönem"] = df["period"].apply(lambda d: d[:7])
+            df.rename(index=str,
+                      columns={"consumption": "UEÇM", "eligibleCustomerConsumption": "Serbest Tüketici UEÇM",
+                               "underSupplyLiabilityConsumption": "Tedarik Yükümlülüğü Kapsamındaki UEÇM"},
+                      inplace=True)
+            df = df[["Dönem", "UEÇM", "Serbest Tüketici UEÇM", "Tedarik Yükümlülüğü Kapsamındaki UEÇM"]]
         except KeyError:
             return __pd.DataFrame()
         else:
-            return df_uecm
+            return df
 
 
 def __uecm_serbest_tuketici(tarih=__dt.datetime.today().strftime("%Y-%m-%d")):
@@ -514,27 +413,17 @@ def __uecm_serbest_tuketici(tarih=__dt.datetime.today().strftime("%Y-%m-%d")):
     """
     if __dogrulama.__tarih_dogrulama(tarih):
         try:
-            resp = __requests.get(__transparency_url + "swv-v2" + "?period=" + tarih, headers=__headers,
-                                  timeout=__param.__timeout)
-            resp.raise_for_status()
-            list_uecm = resp.json()["body"]["swvV2List"]
-            df_uecm = __pd.DataFrame(list_uecm)
-            df_uecm["Saat"] = df_uecm["vc_gec_trh"].apply(lambda h: int(h[11:13]))
-            df_uecm["Tarih"] = __pd.to_datetime(df_uecm["vc_gec_trh"].apply(lambda d: d[:10]))
-            df_uecm.rename(index=str, columns={"st": "Serbest Tüketici UEÇM"}, inplace=True)
-            df_uecm = df_uecm[["Tarih", "Saat", "Serbest Tüketici UEÇM"]]
-        except __ConnectionError:
-            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-        except __Timeout:
-            __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-        except __HTTPError as e:
-            __dogrulama.__check_http_error(e.response.status_code)
-        except __RequestException:
-            __logging.error(__param.__request_error, exc_info=False)
+            particular_url = __first_part_url + "swv-v2" + "?period=" + tarih
+            json = __make_requests(particular_url)
+            df = __pd.DataFrame(json["body"]["swvV2List"])
+            df["Saat"] = df["vc_gec_trh"].apply(lambda h: int(h[11:13]))
+            df["Tarih"] = __pd.to_datetime(df["vc_gec_trh"].apply(lambda d: d[:10]))
+            df.rename(index=str, columns={"st": "Serbest Tüketici UEÇM"}, inplace=True)
+            df = df[["Tarih", "Saat", "Serbest Tüketici UEÇM"]]
         except KeyError:
             return __pd.DataFrame()
         else:
-            return df_uecm
+            return df
 
 
 def __uecm_tedarik(tarih=__dt.datetime.today().strftime("%Y-%m-%d")):
@@ -554,27 +443,17 @@ def __uecm_tedarik(tarih=__dt.datetime.today().strftime("%Y-%m-%d")):
     """
     if __dogrulama.__tarih_dogrulama(tarih):
         try:
-            resp = __requests.get(
-                __transparency_url + "under-supply-liability-consumption" + "?startDate=" + tarih + "&endDate=" + tarih,
-                headers=__headers, timeout=__param.__timeout)
-            resp.raise_for_status()
-            list_uecm = resp.json()["body"]["swvList"]
-            df_uecm = __pd.DataFrame(list_uecm)
-            df_uecm["Dönemi"] = df_uecm["date"].apply(lambda d: d[:7])
-            df_uecm.rename(index=str, columns={"swv": "Tedarik Yükümlülüğü Kapsamındaki UEÇM"}, inplace=True)
-            df_uecm = df_uecm[["Dönemi", "Tedarik Yükümlülüğü Kapsamındaki UEÇM"]]
-        except __ConnectionError:
-            __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-        except __Timeout:
-            __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-        except __HTTPError as e:
-            __dogrulama.__check_http_error(e.response.status_code)
-        except __RequestException:
-            __logging.error(__param.__request_error, exc_info=False)
+            particular_url = __first_part_url + "under-supply-liability-consumption" + "?startDate=" + tarih + \
+                             "&endDate=" + tarih
+            json = __make_requests(particular_url)
+            df = __pd.DataFrame(json["body"]["swvList"])
+            df["Dönem"] = df["date"].apply(lambda d: d[:7])
+            df.rename(index=str, columns={"swv": "Tedarik Yükümlülüğü Kapsamındaki UEÇM"}, inplace=True)
+            df = df[["Dönem", "Tedarik Yükümlülüğü Kapsamındaki UEÇM"]]
         except KeyError:
             return __pd.DataFrame()
         else:
-            return df_uecm
+            return df
 
 
 def __serbest_tuketici_sayisi():
@@ -590,28 +469,18 @@ def __serbest_tuketici_sayisi():
     Serbest Tüketici Sayısı (Tarih, Serbest Tüketici Sayısı, Artış Oranı)
     """
     try:
-        resp = __requests.get(__transparency_url + "eligible-consumer-quantity", headers=__headers,
-                              timeout=__param.__timeout)
-        resp.raise_for_status()
-        list_st = resp.json()["body"]["eligibleConsumerQuantityList"]
-        df_st = __pd.DataFrame(list_st)
-        df_st["Dönem"] = __pd.to_datetime(df_st["date"].apply(lambda d: d[:10]))
-        df_st.rename(index=str,
-                     columns={"meterQuantity": "Serbest Tüketici Sayısı", "meterIncreaseRate": "Artış Oranı"},
-                     inplace=True)
-        df_st = df_st[["Dönem", "Serbest Tüketici Sayısı", "Artış Oranı"]]
-    except __ConnectionError:
-        __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-    except __Timeout:
-        __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-    except __HTTPError as e:
-        __dogrulama.__check_http_error(e.response.status_code)
-    except __RequestException:
-        __logging.error(__param.__request_error, exc_info=False)
+        particular_url = __first_part_url + "eligible-consumer-quantity"
+        json = __make_requests(particular_url)
+        df = __pd.DataFrame(json["body"]["eligibleConsumerQuantityList"])
+        df["Dönem"] = __pd.to_datetime(df["date"].apply(lambda d: d[:10]))
+        df.rename(index=str,
+                  columns={"meterQuantity": "Serbest Tüketici Sayısı", "meterIncreaseRate": "Artış Oranı"},
+                  inplace=True)
+        df = df[["Dönem", "Serbest Tüketici Sayısı", "Artış Oranı"]]
     except KeyError:
         return __pd.DataFrame()
     else:
-        return df_st
+        return df
 
 
 def __profil_serbest_tuketici_sayisi(tarih=__dt.datetime.today().strftime("%Y-%m-%d")):
@@ -631,30 +500,18 @@ def __profil_serbest_tuketici_sayisi(tarih=__dt.datetime.today().strftime("%Y-%m
 
     """
     try:
-        resp = __requests.get(
-            __transparency_url + "st" + "?startDate=" + tarih +
-            "&endDate=" + tarih, headers=__headers, timeout=__param.__timeout)
-        resp.raise_for_status()
-        list_st = resp.json()["body"]["stList"]
-        df_st = __pd.DataFrame(list_st)
-        df_st["Profil"] = df_st["id"].apply(lambda x: x["profilAboneGrupAdi"])
-        df_st["Dönem"] = df_st["id"].apply(lambda x: __pd.to_datetime(x["date"][:10]))
-        df_st = df_st.pivot(index='Dönem', columns='Profil', values='stCount').reset_index()
-        df_st.columns.name = None
-        df_st.columns = df_st.columns.str.title()
-        df_st.rename(index=str,
-                     columns={"Aydinlatma": "Aydınlatma", "Diger": "Diğer",
-                              "Tarimsal": "Tarımsal"},
-                     inplace=True)
-    except __ConnectionError:
-        __logging.error(__param.__requestsConnectionErrorLogging, exc_info=False)
-    except __Timeout:
-        __logging.error(__param.__requestsTimeoutErrorLogging, exc_info=False)
-    except __HTTPError as e:
-        __dogrulama.__check_http_error(e.response.status_code)
-    except __RequestException:
-        __logging.error(__param.__request_error, exc_info=False)
+        particular_url = __first_part_url + "st" + "?startDate=" + tarih + "&endDate=" + tarih
+        json = __make_requests(particular_url)
+        df = __pd.DataFrame(json["body"]["stList"])
+        df["Profil"] = df["id"].apply(lambda x: x["profilAboneGrupAdi"])
+        df["Dönem"] = df["id"].apply(lambda x: __pd.to_datetime(x["date"][:10]))
+        df = df.pivot(index='Dönem', columns='Profil', values='stCount').reset_index()
+        df.columns.name = None
+        df.columns = df.columns.str.title()
+        df.rename(index=str,
+                  columns={"Aydinlatma": "Aydınlatma", "Diger": "Diğer", "Tarimsal": "Tarımsal"},
+                  inplace=True)
     except KeyError:
         return __pd.DataFrame()
     else:
-        return df_st
+        return df

@@ -44,7 +44,7 @@ def hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
             df["Saat"] = df["date"].apply(lambda h: int(h[11:13]))
             df["Tarih"] = __pd.to_datetime(df["date"].apply(lambda d: d[:10]))
             df = df[["Tarih", "Saat", "Talep Miktarı", "Arz Miktarı"]]
-        except KeyError and TypeError:
+        except (KeyError, TypeError):
             return __pd.DataFrame()
         else:
             return df
@@ -120,7 +120,7 @@ def __organizasyonel_net_hacim(baslangic_tarihi, bitis_tarihi, org):
         df["Tarih"] = __pd.to_datetime(df["date"].apply(lambda d: d[:10]))
         df[org["Kısa Adı"]] = df["Talep Miktarı"] - df["Arz Miktarı"]
         df = df[["Tarih", "Saat", org["Kısa Adı"]]]
-    except KeyError and TypeError:
+    except (KeyError, TypeError):
         return __pd.DataFrame()
     else:
         return df
@@ -153,7 +153,7 @@ def __organizasyonel_arz_hacim(baslangic_tarihi, bitis_tarihi, org):
         df["Tarih"] = __pd.to_datetime(df["date"].apply(lambda d: d[:10]))
         df.rename(index=str, columns={"quantity": org["Kısa Adı"]}, inplace=True)
         df = df[["Tarih", "Saat", org["Kısa Adı"]]]
-    except KeyError and TypeError:
+    except (KeyError, TypeError):
         return __pd.DataFrame()
     else:
         return df
@@ -186,7 +186,7 @@ def __organizasyonel_talep_hacim(baslangic_tarihi, bitis_tarihi, org):
         df["Tarih"] = __pd.to_datetime(df["date"].apply(lambda d: d[:10]))
         df.rename(index=str, columns={"quantity": org["Kısa Adı"]}, inplace=True)
         df = df[["Tarih", "Saat", org["Kısa Adı"]]]
-    except KeyError and TypeError:
+    except (KeyError, TypeError):
         return __pd.DataFrame()
     else:
         return df

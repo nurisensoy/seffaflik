@@ -36,7 +36,7 @@ def ptf(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
             df["Tarih"] = __pd.to_datetime(df["date"].apply(lambda d: d[:10]))
             df.rename(index=str, columns={"price": "PTF"}, inplace=True)
             df = df[["Tarih", "Saat", "PTF"]]
-        except KeyError and TypeError:
+        except (KeyError, TypeError):
             return __pd.DataFrame()
         else:
             return df
@@ -86,7 +86,7 @@ def hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                          "Maksimum Talep Miktarı", "Maksimum Arz Miktarı"]]
             else:
                 df = df[["Tarih", "Saat", "Talep Eşleşme Miktarı", "Arz Eşleşme Miktarı"]]
-        except KeyError and TypeError:
+        except (KeyError, TypeError):
             return __pd.DataFrame()
         else:
             return df
@@ -150,7 +150,7 @@ def arz_talep_egrisi(tarih=__dt.datetime.today().strftime("%Y-%m-%d")):
             df["Saat"] = df["date"].apply(lambda x: int(x[11:13]))
             df.rename(index=str, columns={"demand": "Talep", "supply": "Arz", "price": "Fiyat"}, inplace=True)
             df = df[["Saat", "Talep", "Fiyat", "Arz"]]
-        except KeyError and TypeError:
+        except (KeyError, TypeError):
             return __pd.DataFrame()
         else:
             return df
@@ -186,7 +186,7 @@ def islem_hacmi(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                       columns={"volumeOfBid": "Talep İşlem Hacmi", "volumeOfAsk": "Arz İşlem Hacmi"},
                       inplace=True)
             df = df[["Tarih", "Saat", "Talep İşlem Hacmi", "Arz İşlem Hacmi"]]
-        except KeyError and TypeError:
+        except (KeyError, TypeError):
             return __pd.DataFrame()
         else:
             return df
@@ -223,7 +223,7 @@ def blok_miktari(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                       inplace=True)
             df = df[["Tarih", "Saat", "Talep Blok Teklif Miktarı", "Eşleşen Talep Blok Teklif Miktarı",
                      "Arz Blok Teklif Miktarı", "Eşleşen Arz Blok Teklif Miktarı"]]
-        except KeyError and TypeError:
+        except (KeyError, TypeError):
             return __pd.DataFrame()
         else:
             return df
@@ -256,7 +256,7 @@ def fark_tutari(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                                           "originatingFromRounding": "Yuvarlama",
                                           "date": "Tarih", "total": "Toplam"}, inplace=True)
             df = df[["Tarih", "Talep", "Arz", "Yuvarlama", "Toplam"]]
-        except KeyError and TypeError:
+        except (KeyError, TypeError):
             return __pd.DataFrame()
         else:
             return df
@@ -282,7 +282,7 @@ def kptf(tarih=(__dt.datetime.today() + __dt.timedelta(days=1)).strftime("%Y-%m-
             df["Saat"] = df["date"].apply(lambda x: int(x[11:13]))
             df.rename(index=str, columns={"marketTradePrice": "KPTF"}, inplace=True)
             df = df[["Saat", "KPTF"]]
-        except KeyError and TypeError:
+        except (KeyError, TypeError):
             return __pd.DataFrame()
         else:
             return df
@@ -314,7 +314,7 @@ def __organizasyonel_net_hacim(baslangic_tarihi, bitis_tarihi, org):
                   inplace=True)
         df[org["Kısa Adı"]] = df["Talep Eşleşme Miktarı"] - df["Arz Eşleşme Miktarı"]
         df = df[["Tarih", "Saat", org["Kısa Adı"]]]
-    except KeyError and TypeError:
+    except (KeyError, TypeError):
         return __pd.DataFrame()
     else:
         return df
@@ -347,7 +347,7 @@ def __organizasyonel_arz_hacim(baslangic_tarihi, bitis_tarihi, org):
                   inplace=True)
         df[org["Kısa Adı"]] = df["Arz Eşleşme Miktarı"]
         df = df[["Tarih", "Saat", org["Kısa Adı"]]]
-    except KeyError and TypeError:
+    except (KeyError, TypeError):
         return __pd.DataFrame()
     else:
         return df
@@ -379,7 +379,7 @@ def __organizasyonel_talep_hacim(baslangic_tarihi, bitis_tarihi, org):
                   inplace=True)
         df[org["Kısa Adı"]] = df["Talep Eşleşme Miktarı"]
         df = df[["Tarih", "Saat", org["Kısa Adı"]]]
-    except KeyError and TypeError:
+    except (KeyError, TypeError):
         return __pd.DataFrame()
     else:
         return df

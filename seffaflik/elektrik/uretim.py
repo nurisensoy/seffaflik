@@ -31,7 +31,7 @@ def organizasyonlar():
                            "organizationStatus": "Durum"},
                   inplace=True)
         df = df[["Id", "Adı", "EIC Kodu", "Kısa Adı", "Durum"]]
-    except KeyError and TypeError:
+    except (KeyError, TypeError):
         return __pd.DataFrame()
     else:
         return df
@@ -58,7 +58,7 @@ def organizasyon_veris_cekis_birimleri(eic):
             df_unit = __pd.DataFrame(json["body"]["injectionUnitNames"])
             df_unit.rename(index=str, columns={"id": "Id", "name": "Adı", "eic": "EIC Kodu"}, inplace=True)
             df_unit = df_unit[["Id", "Adı", "EIC Kodu"]]
-        except KeyError and TypeError:
+        except (KeyError, TypeError):
             return __pd.DataFrame()
         else:
             return df_unit
@@ -118,7 +118,7 @@ def kgup(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                                "ruzgar": "Rüzgar", "tasKomur": "Taş Kömür", "toplam": "Toplam"}, inplace=True)
             df = df[["Tarih", "Saat", "Doğalgaz", "Barajlı", "Linyit", "Akarsu", "İthal Kömür", "Rüzgar",
                      "Fuel Oil", "Jeo Termal", "Taş Kömür", "Biokütle", "Nafta", "Diğer", "Toplam"]]
-        except KeyError and TypeError:
+        except (KeyError, TypeError):
             return __pd.DataFrame()
         else:
             return df
@@ -188,7 +188,7 @@ def eak(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                                "ruzgar": "Rüzgar", "tasKomur": "Taş Kömür", "toplam": "Toplam"}, inplace=True)
             df = df[["Tarih", "Saat", "Doğalgaz", "Barajlı", "Linyit", "Akarsu", "İthal Kömür", "Rüzgar",
                      "Fuel Oil", "Jeo Termal", "Taş Kömür", "Biokütle", "Nafta", "Diğer", "Toplam"]]
-        except KeyError and TypeError:
+        except (KeyError, TypeError):
             return __pd.DataFrame()
         else:
             return df
@@ -259,7 +259,7 @@ def kudup(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                                "ruzgar": "Rüzgar", "tasKomur": "Taş Kömür", "toplam": "Toplam"}, inplace=True)
             df = df[["Tarih", "Saat", "Doğalgaz", "Barajlı", "Linyit", "Akarsu", "İthal Kömür", "Rüzgar",
                      "Fuel Oil", "Jeo Termal", "Taş Kömür", "Biokütle", "Nafta", "Diğer", "Toplam"]]
-        except KeyError and TypeError:
+        except (KeyError, TypeError):
             return __pd.DataFrame()
         else:
             return df
@@ -299,7 +299,7 @@ def uevm(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                 ["Tarih", "Saat", "Doğalgaz", "Barajlı", "Linyit", "Akarsu", "İthal Kömür", "Rüzgar",
                  "Fuel Oil", "Jeo Termal", "Asfaltit Kömür", "Taş Kömür", "Biokütle", "Nafta", "LNG", "Uluslararası",
                  "Diğer", "Toplam"]]
-        except KeyError and TypeError:
+        except (KeyError, TypeError):
             return __pd.DataFrame()
         else:
             return df
@@ -365,7 +365,7 @@ def __gerceklesen(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
             ["Tarih", "Saat", "Doğalgaz", "Barajlı", "Linyit", "Akarsu", "İthal Kömür", "Rüzgar", "Güneş",
              "Fuel Oil", "Jeo Termal", "Asfaltit Kömür", "Taş Kömür", "Biokütle", "Nafta", "LNG", "Uluslararası",
              "Toplam"]]
-    except KeyError and TypeError:
+    except (KeyError, TypeError):
         return __pd.DataFrame()
     else:
         return df
@@ -405,7 +405,7 @@ def __santral_bazli_gerceklesen(baslangic_tarihi, bitis_tarihi, santral_id):
             ["Tarih", "Saat", "Doğalgaz", "Barajlı", "Linyit", "Akarsu", "İthal Kömür", "Rüzgar", "Güneş",
              "Fuel Oil", "Jeo Termal", "Asfaltit Kömür", "Taş Kömür", "Biokütle", "Nafta", "LNG", "Uluslararası",
              "Toplam"]]
-    except KeyError and TypeError:
+    except (KeyError, TypeError):
         return __pd.DataFrame()
     else:
         return df
@@ -439,7 +439,7 @@ def __organizasyon_cekis_birimleri(org):
                   inplace=True)
         df = df[["Org Id", "Org Adı", "Org EIC Kodu", "Org Kısa Adı",
                  "Org Durum", "UEVÇB Id", "UEVÇB Adı", "UEVÇB EIC Kodu"]]
-    except KeyError and TypeError:
+    except (KeyError, TypeError):
         return __pd.DataFrame()
     else:
         return df
@@ -469,7 +469,7 @@ def __kgup(baslangic_tarihi, bitis_tarihi, org):
             df["Tarih"] = __pd.to_datetime(df["tarih"].apply(lambda d: d[:10]))
             df.rename(index=str, columns={"toplam": org["Kısa Adı"]}, inplace=True)
             df = df[["Tarih", "Saat", org["Kısa Adı"]]]
-        except KeyError and TypeError:
+        except (KeyError, TypeError):
             return __pd.DataFrame()
         else:
             return df
@@ -499,7 +499,7 @@ def __eak(baslangic_tarihi, bitis_tarihi, org):
             df["Tarih"] = __pd.to_datetime(df["tarih"].apply(lambda d: d[:10]))
             df.rename(index=str, columns={"toplam": org["Kısa Adı"]}, inplace=True)
             df = df[["Tarih", "Saat", org["Kısa Adı"]]]
-        except KeyError and TypeError:
+        except (KeyError, TypeError):
             return __pd.DataFrame()
         else:
             return df

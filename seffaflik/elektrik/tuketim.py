@@ -29,7 +29,7 @@ def sehir():
         df = __pd.DataFrame(json["body"]["cityList"])
         df.rename(index=str, columns={"cityId": "Şehir Id", "districtId": "İlçe Id", "cityName": "Şehir İsmi",
                                       "districtName": "İlçe İsmi"}, inplace=True)
-    except KeyError and TypeError:
+    except (KeyError, TypeError):
         return __pd.DataFrame()
     else:
         return df.drop_duplicates().reset_index(drop=True)
@@ -60,7 +60,7 @@ def gerceklesen(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
             df["Tarih"] = __pd.to_datetime(df["date"].apply(lambda d: d[:10]))
             df.rename(index=str, columns={"consumption": "Tüketim"}, inplace=True)
             df = df[["Tarih", "Saat", "Tüketim"]]
-        except KeyError and TypeError:
+        except (KeyError, TypeError):
             return __pd.DataFrame()
         else:
             return df
@@ -90,7 +90,7 @@ def uecm(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
             df["Tarih"] = __pd.to_datetime(df["date"].apply(lambda d: d[:10]))
             df.rename(index=str, columns={"swv": "UEÇM"}, inplace=True)
             df = df[["Tarih", "Saat", "UEÇM"]]
-        except KeyError and TypeError:
+        except (KeyError, TypeError):
             return __pd.DataFrame()
         else:
             return df
@@ -204,7 +204,7 @@ def tahmin(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
             df["Tarih"] = __pd.to_datetime(df["date"].apply(lambda d: d[:10]))
             df.rename(index=str, columns={"lep": "Tüketim"}, inplace=True)
             df = df[["Tarih", "Saat", "Tüketim"]]
-        except KeyError and TypeError:
+        except (KeyError, TypeError):
             return __pd.DataFrame()
         else:
             return df
@@ -259,7 +259,7 @@ def sayac_okuyan_kurum(tarih=__dt.datetime.today().strftime("%Y-%m-%d")):
             df.rename(index=str,
                       columns={"id": "Id", "name": "Şirket Adı", "status": "Durum"},
                       inplace=True)
-        except KeyError and TypeError:
+        except (KeyError, TypeError):
             return __pd.DataFrame()
         else:
             return df
@@ -281,7 +281,7 @@ def dagitim_bolgeleri():
         json = __make_requests(particular_url)
         df = __pd.DataFrame(json["body"]["distributionList"])
         df.rename(index=str, columns={"id": "Id", "name": "Dağıtım Şirket Adı"}, inplace=True)
-    except KeyError and TypeError:
+    except (KeyError, TypeError):
         return __pd.DataFrame()
     else:
         return df
@@ -308,7 +308,7 @@ def profil_abone_grubu(tarih=__dt.datetime.today().strftime("%Y-%m-%d"), distrib
             json = __make_requests(particular_url)
             df = __pd.DataFrame(json["body"]["subscriberProfileGroupList"])
             df.rename(index=str, columns={"id": "Id", "name": "Profil Adı"}, inplace=True)
-        except KeyError and TypeError:
+        except (KeyError, TypeError):
             return __pd.DataFrame()
         else:
             return df
@@ -359,7 +359,7 @@ def sayac_okuma_tipi():
         json = __make_requests(particular_url)
         df = __pd.DataFrame(json["body"]["meterReadingTypeList"])
         df.rename(index=str, columns={"id": "Id", "name": "Sayaç Tipi"}, inplace=True)
-    except KeyError and TypeError:
+    except (KeyError, TypeError):
         return __pd.DataFrame()
     else:
         return df
@@ -391,7 +391,7 @@ def __uecm_donemlik(tarih=__dt.datetime.today().strftime("%Y-%m-%d")):
                                "underSupplyLiabilityConsumption": "Tedarik Yükümlülüğü Kapsamındaki UEÇM"},
                       inplace=True)
             df = df[["Dönem", "UEÇM", "Serbest Tüketici UEÇM", "Tedarik Yükümlülüğü Kapsamındaki UEÇM"]]
-        except KeyError and TypeError:
+        except (KeyError, TypeError):
             return __pd.DataFrame()
         else:
             return df
@@ -420,7 +420,7 @@ def __uecm_serbest_tuketici(tarih=__dt.datetime.today().strftime("%Y-%m-%d")):
             df["Tarih"] = __pd.to_datetime(df["vc_gec_trh"].apply(lambda d: d[:10]))
             df.rename(index=str, columns={"st": "Serbest Tüketici UEÇM"}, inplace=True)
             df = df[["Tarih", "Saat", "Serbest Tüketici UEÇM"]]
-        except KeyError and TypeError:
+        except (KeyError, TypeError):
             return __pd.DataFrame()
         else:
             return df
@@ -450,7 +450,7 @@ def __uecm_tedarik(tarih=__dt.datetime.today().strftime("%Y-%m-%d")):
             df["Dönem"] = df["date"].apply(lambda d: d[:7])
             df.rename(index=str, columns={"swv": "Tedarik Yükümlülüğü Kapsamındaki UEÇM"}, inplace=True)
             df = df[["Dönem", "Tedarik Yükümlülüğü Kapsamındaki UEÇM"]]
-        except KeyError and TypeError:
+        except (KeyError, TypeError):
             return __pd.DataFrame()
         else:
             return df
@@ -477,7 +477,7 @@ def __serbest_tuketici_sayisi():
                   columns={"meterQuantity": "Serbest Tüketici Sayısı", "meterIncreaseRate": "Artış Oranı"},
                   inplace=True)
         df = df[["Dönem", "Serbest Tüketici Sayısı", "Artış Oranı"]]
-    except KeyError and TypeError:
+    except (KeyError, TypeError):
         return __pd.DataFrame()
     else:
         return df
@@ -511,7 +511,7 @@ def __profil_serbest_tuketici_sayisi(tarih=__dt.datetime.today().strftime("%Y-%m
         df.rename(index=str,
                   columns={"Aydinlatma": "Aydınlatma", "Diger": "Diğer", "Tarimsal": "Tarımsal"},
                   inplace=True)
-    except KeyError and TypeError:
+    except (KeyError, TypeError):
         return __pd.DataFrame()
     else:
         return df

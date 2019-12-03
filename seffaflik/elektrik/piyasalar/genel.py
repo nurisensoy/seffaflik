@@ -83,7 +83,7 @@ def hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                                    "intradayVolume": "GİP Mİktarı", "balancedPowerMarketVolume": "DGP Miktarı"},
                           inplace=True)
                 df = df[["Tarih", "İA Miktarı", "GÖP Mİktarı", "GİP Mİktarı", "DGP Miktarı"]]
-            except KeyError and TypeError:
+            except (KeyError, TypeError):
                 return __pd.DataFrame()
             else:
                 return df
@@ -125,7 +125,7 @@ def fiyat(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                                    "intradayVolume": "GİP Mİktarı", "balancedPowerMarketVolume": "DGP Miktarı"},
                           inplace=True)
                 df = df[["Tarih", "İA Miktarı", "GÖP Mİktarı", "GİP Mİktarı", "DGP Miktarı"]]
-            except KeyError and TypeError:
+            except (KeyError, TypeError):
                 return __pd.DataFrame()
             else:
                 return df
@@ -153,7 +153,7 @@ def __katilimci_sayisi(tarih):
             df["privateSectorOfSum"].unique()) + list(df["publicCompany"]) + list(
             df["publicCompanyOfSum"].unique())], index=[tarih], columns=columns)
         df["Toplam"] = df["Kamu Kuruluşu"]["Toplam"] + df["Özel Sektör"]["Toplam"]
-    except KeyError and TypeError:
+    except (KeyError, TypeError):
         return __pd.DataFrame()
     else:
         return df

@@ -33,7 +33,7 @@ def smf(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                       columns={"price": "SMF", "smpDirection": "Sistem Yönü"},
                       inplace=True)
             df = df[["Tarih", "Saat", "SMF", "Sistem Yönü"]]
-        except KeyError:
+        except KeyError and TypeError:
             return __pd.DataFrame()
         else:
             return df
@@ -73,7 +73,7 @@ def hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
             df = df[
                 ["Tarih", "Saat", "Net", "YAL (0)", "YAL (1)", "YAL (2)", "Teslim Edilen YAL", "YAT (0)", "YAT (1)",
                  "YAT (2)", "Teslim Edilen YAT", "Sistem Yönü"]]
-        except KeyError:
+        except KeyError and TypeError:
             return __pd.DataFrame()
         else:
             return df

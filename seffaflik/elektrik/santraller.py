@@ -30,7 +30,7 @@ def santraller(tarih=__dt.datetime.now().strftime("%Y-%m-%d")):
             df.rename(index=str, columns={"id": "Id", "name": "Adı", "eic": "EIC Kodu",
                                           "shortName": "Kısa Adı"}, inplace=True)
             df = df[["Id", "Adı", "EIC Kodu", "Kısa Adı"]]
-        except KeyError:
+        except KeyError and TypeError:
             return __pd.DataFrame()
         else:
             return df
@@ -58,7 +58,7 @@ def santral_veris_cekis_birimleri(tarih=__dt.datetime.today().strftime("%Y-%m-%d
             df = __pd.DataFrame(json["body"]["uevcbList"])
             df.rename(index=str, columns={"id": "Id", "name": "Adı", "eic": "EIC Kodu"}, inplace=True)
             df = df[["Id", "Adı", "EIC Kodu"]]
-        except KeyError:
+        except KeyError and TypeError:
             return __pd.DataFrame()
         else:
             return df
@@ -106,7 +106,7 @@ def gercek_zamanli_uretim_yapan_santraller():
         df.rename(index=str, columns={"id": "Id", "name": "Adı", "eic": "EIC Kodu",
                                       "shortName": "Kısa Adı"}, inplace=True)
         df = df[["Id", "Adı", "EIC Kodu", "Kısa Adı"]]
-    except KeyError:
+    except KeyError and TypeError:
         return __pd.DataFrame()
     else:
         return df
@@ -132,7 +132,7 @@ def yekdem_santralleri(tarih=__dt.datetime.now().strftime("%Y-%m-%d")):
             df.rename(index=str, columns={"id": "Id", "name": "Adı", "eic": "EIC Kodu",
                                           "shortName": "Kısa Adı"}, inplace=True)
             df = df[["Id", "Adı", "EIC Kodu", "Kısa Adı"]]
-        except KeyError:
+        except KeyError and TypeError:
             return __pd.DataFrame()
         else:
             return df
@@ -229,7 +229,7 @@ def ariza_bakim_bildirimleri(baslangic_tarihi=__dt.datetime.today().strftime("%Y
                 ["Olay Bildirim Tarihi", "Santral Adı", "UEVCB Adı", "Şehir", "Olay Balangıç Tarihi",
                  "Olay Bitiş Tarihi", "İşletmedeki Kurulu Güç", "Olay Sırasında Kapasite", "Yakıt Tipi", "Gerekçe",
                  "Gerekçe Tipi"]]
-        except KeyError:
+        except KeyError and TypeError:
             return __pd.DataFrame()
         else:
             return df
@@ -255,7 +255,7 @@ def __kurulu_guc(tarih):
         df.insert(loc=0, column="Tarih", value=__pd.to_datetime(tarih))
         df.rename(index=str, columns={"capacity": "Kurulu Güç"}, inplace=True)
         df = df[["Tarih", "Kurulu Güç"]]
-    except KeyError:
+    except KeyError and TypeError:
         return __pd.DataFrame()
     else:
         return df
@@ -283,7 +283,7 @@ def __yekdem_kurulu_guc(tarih):
         df.set_axis(columns, axis=1, inplace=True)
         df.reset_index(drop=True, inplace=True)
         df.insert(loc=0, column="Tarih", value=__pd.to_datetime(tarih))
-    except KeyError:
+    except KeyError and TypeError:
         return __pd.DataFrame()
     else:
         return df
@@ -318,7 +318,7 @@ def __santral_veris_cekis_birimleri(tarih, santral):
                   inplace=True)
         df = df[["Santral Id", "Santral Adı", "Santral EIC Kodu", "Santral Kısa Adı", "UEVÇB Id",
                  "UEVÇB Adı", "UEVÇB EIC Kodu"]]
-    except KeyError:
+    except KeyError and TypeError:
         return __pd.DataFrame()
     else:
         return df

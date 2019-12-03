@@ -38,7 +38,7 @@ def dengesizlik(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                 ["Tarih", "Saat", "Pozitif Dengesizlik Miktarı (MWh)", "Negatif Dengesizlik Miktarı (MWh)",
                  "Pozitif Dengesizlik Tutarı (TL)", "Negatif Dengesizlik Tutarı (TL)"]]
             df.dropna(subset=df.columns[2:], how="all", inplace=True)
-        except KeyError:
+        except KeyError and TypeError:
             return __pd.DataFrame()
         else:
             return df

@@ -31,7 +31,7 @@ def aof(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
             df["Tarih"] = __pd.to_datetime(df["date"].apply(lambda d: d[:10]))
             df.rename(index=str, columns={"price": "AOF"}, inplace=True)
             df = df[["Tarih", "Saat", "AOF"]]
-        except KeyError:
+        except KeyError and TypeError:
             return __pd.DataFrame()
         else:
             return df
@@ -75,7 +75,7 @@ def ozet(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                  "Eşleşme Miktarı", "İşlem Hacmi", "Min. Talep Fiyatı", "Max. Talep Fiyatı",
                  "Min. Arz Fiyatı", "Max. Arz Fiyatı",
                  "Min. Eşleşme Fiyatı", "Max. Eşleşme Fiyatı"]]
-        except KeyError:
+        except KeyError and TypeError:
             return __pd.DataFrame()
         else:
             return df
@@ -110,7 +110,7 @@ def hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
             df.fillna(0.0, inplace=True)
             df["Eşleşme Miktarı"] = df["Blok Eşleşme Miktarı"] + df["Saatlik Eşleşme Miktarı"]
             df = df[["Tarih", "Saat", "Blok Eşleşme Miktarı", "Saatlik Eşleşme Miktarı", "Eşleşme Miktarı"]]
-        except KeyError:
+        except KeyError and TypeError:
             return __pd.DataFrame()
         else:
             return df
@@ -140,7 +140,7 @@ def islem_hacmi(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
             df["Tarih"] = __pd.to_datetime(df["date"].apply(lambda d: d[:10]))
             df.rename(index=str, columns={"income": "İşlem Hacmi"}, inplace=True)
             df = df[["Tarih", "Saat", "İşlem Hacmi"]]
-        except KeyError:
+        except KeyError and TypeError:
             return __pd.DataFrame()
         else:
             return df
@@ -172,7 +172,7 @@ def islem_akisi(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                       columns={"id": "Id", "conract": "Kontrat Adı", "price": "Fiyat", "quantity": "Miktar"},
                       inplace=True)
             df = df[["Tarih", "Saat", "Id", "Kontrat Adı", "Fiyat", "Miktar"]]
-        except KeyError:
+        except KeyError and TypeError:
             return __pd.DataFrame()
         else:
             return df
@@ -208,7 +208,7 @@ def teklif_edilen_miktarlar(baslangic_tarihi=__dt.datetime.today().strftime("%Y-
                       inplace=True)
             df = df[["Tarih", "Saat", "Saatlik Talep Miktarı", "Blok Talep Miktarı",
                      "Saatlik Arz Miktarı", "Blok Arz Miktarı"]]
-        except KeyError:
+        except KeyError and TypeError:
             return __pd.DataFrame()
         else:
             return df
@@ -247,7 +247,7 @@ def min_max_fiyatlar(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d")
                       inplace=True)
             df = df[["Tarih", "Saat", "Min. Alış Fiyatı", "Max. Alış Fiyatı", "Min. Satış Fiyatı",
                      "Max. Satış Fiyatı", "Min. Eşleşme Fiyatı", "Max. Eşleşme Fiyatı"]]
-        except KeyError:
+        except KeyError and TypeError:
             return __pd.DataFrame()
         else:
             return df

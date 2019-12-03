@@ -29,7 +29,7 @@ def primer_sekonder_fiyat_miktar(baslangic_tarihi=__dt.datetime.today().strftime
             sfk_fiyat = sekonder_rezerv_fiyati(baslangic_tarihi, bitis_tarihi)
             df = __red(lambda left, right: __pd.merge(left, right, how="outer", on=["Tarih", "Saat"], sort=True),
                        [pfk_miktar, pfk_fiyat, sfk_miktar, sfk_fiyat])
-        except KeyError:
+        except KeyError and TypeError:
             return __pd.DataFrame()
         else:
             return df
@@ -59,7 +59,7 @@ def primer_frekans_rezerv_miktari(baslangic_tarihi=__dt.datetime.today().strftim
             df["Tarih"] = __pd.to_datetime(df["effectiveDate"].apply(lambda d: d[:10]))
             df.rename(index=str, columns={"totalAmount": "PFK Yükümlülük (MWh)"}, inplace=True)
             df = df[["Tarih", "Saat", "PFK Yükümlülük (MWh)"]]
-        except KeyError:
+        except KeyError and TypeError:
             return __pd.DataFrame()
         else:
             return df
@@ -89,7 +89,7 @@ def sekonder_frekans_rezerv_miktari(baslangic_tarihi=__dt.datetime.today().strft
             df["Tarih"] = __pd.to_datetime(df["effectiveDate"].apply(lambda d: d[:10]))
             df.rename(index=str, columns={"totalAmount": "SFK Yükümlülük (MWh)"}, inplace=True)
             df = df[["Tarih", "Saat", "SFK Yükümlülük (MWh)"]]
-        except KeyError:
+        except KeyError and TypeError:
             return __pd.DataFrame()
         else:
             return df
@@ -119,7 +119,7 @@ def primer_rezerv_fiyati(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-
             df["Tarih"] = __pd.to_datetime(df["effectiveDate"].apply(lambda d: d[:10]))
             df.rename(index=str, columns={"price": "PFK Fiyat (TL/MWh)"}, inplace=True)
             df = df[["Tarih", "Saat", "PFK Fiyat (TL/MWh)"]]
-        except KeyError:
+        except KeyError and TypeError:
             return __pd.DataFrame()
         else:
             return df
@@ -149,7 +149,7 @@ def sekonder_rezerv_fiyati(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%
             df["Tarih"] = __pd.to_datetime(df["effectiveDate"].apply(lambda d: d[:10]))
             df.rename(index=str, columns={"price": "SFK Fiyat (TL/MWh)"}, inplace=True)
             df = df[["Tarih", "Saat", "SFK Fiyat (TL/MWh)"]]
-        except KeyError:
+        except KeyError and TypeError:
             return __pd.DataFrame()
         else:
             return df

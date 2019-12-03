@@ -26,27 +26,59 @@ doldurmaları ve "seffaflik@epias.com.tr" mail adresi üzerinden doldurulmuş
 şartnameyi firma ile paylaşmaları gerekmektedir.
 
 ## Kurulum
-### Gereksinimler (Requirements)
+#### Gereksinimler
 seffaflik kütüphanesinin kullanımı için gerekli paketler:
 * pandas
 * requests
 * python-dateutils
-### pip aracılığıyla en son sürümü yükleyin
+
+Not: İlgili paketler aşağıda belirtilen yükleme yöntemini izlediğiniz taktirde otomatik olarak yüklenecektir.
+#### pip aracılığıyla en son sürümü yükleyin
 ```
 $ pip install seffaflik
 ```
 
-### Kimlik (Client Id) Oluşturulması
+#### Kimlik (Client Id) Oluşturulması
+Kütüphane yükleme işlemini tamamladıktan sonra kütüphane aracılığıyla veri çekiş işlemini gerçekleştirebilmeniz için 
+aşağıda belirtilen kimlik oluşturma sürecini de tamamlamış olmanız gerekmektedir.
+
 ```python
 import seffaflik
 seffaflik.Kimlik(istemci_taniticisi="abcdefg")
 ```
 Yukarıdaki işlemi gerçekleştirmenizden sonra ana dizininize özel bir
-.seffaflik/.kimlik dosyası yerleştirir. ~/.seffaflik/.kimlik dosyanız aşağıdaki
+.seffaflik/.kimlik dosyası yerleştirilir. ~/.seffaflik/.kimlik dosyanız aşağıdaki
 gibi görünmelidir:
-```python
+```
 {
-  "istemci_kimligi": "abcdefg"
+  "istemci_taniticisi": "abcdefg"
 }
 ```
+Not: İstemci Tanıtıcı geçerliliğini koruduğu sürece kimlik oluşturma işleminin tekrar gerçekleştirilmesine 
+gerek duyulmamaktadır.
 
+
+## Kullanım
+Kütüphane yükleme ve kimlik oluşturma işlemleri tamamladıktan sonra kütüphane aracılığıyla şeffaflık platformundan 
+kolaylıkla veri çekiş işlemine başlanabilmektedir. Kütüphanenin paketleri, alt-paketleri ve modülleri şu şekilde 
+tasarlanmıştır:
+```
+seffaflik/
+└── elektrik/
+    ├── piyasalar/
+    │   ├── dengesizlik.py
+    │   ├── dgp.py
+    │   ├── genel.py
+    │   ├── gip.py    
+    │   ├── gop.py
+    │   ├── ia.py  
+    │   └── yanhizmetler.py
+    ├── santraller.py
+    ├── tuketim.py
+    └── uretim.py
+```
+Bu çerçevede modüller şu şekilde import edilebilir:
+```python
+from seffaflik.elektrik import santraller, tuketim, uretim
+from seffaflik.elektrik.piyasalar import dengesizlik, dgp, genel, gip, gop, ia, yanhizmetler
+```

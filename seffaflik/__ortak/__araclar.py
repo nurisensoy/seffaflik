@@ -54,7 +54,5 @@ def make_requests(corresponding_url):
         __check_http_error(e.response.status_code)
     except __RequestException:
         __logging.error(__request_error, exc_info=False)
-    except KeyError:
-        return __pd.DataFrame()
     else:
         return json

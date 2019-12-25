@@ -82,3 +82,21 @@ Bu çerçevede modüller şu şekilde import edilebilir:
 from seffaflik.elektrik import santraller, tuketim, uretim
 from seffaflik.elektrik.piyasalar import dengesizlik, dgp, genel, gip, gop, ia, yanhizmetler
 ```
+#### Örnek İstekler
+Yukarıda belirtilen modüller import edildikten sonra aşağıda belirtilen örnek istekler yapılabilecektir.
+##### 1. Piyasa Takas Fiyatı (PTF)
+```python
+df = gop.ptf(baslangic_tarihi='2019-01-01', bitis_tarihi='2019-01-01')
+```
+##### 2. KGÜP Girebilecek Organizasyonlar
+```python
+df = uretim.organizasyonlar()
+```
+##### 3. Uzlaştırmaya Esas Veriş Miktarı (UEVM)
+```python
+df = uretim.uevm(baslangic_tarihi='2019-01-01', bitis_tarihi='2019-01-01')
+```
+##### 4. Dönemsel Serbest Tüketici Sayıları
+```python
+df = tuketim.serbest_tuketici_sayisi("2019-01-01","2019-10-01")
+```

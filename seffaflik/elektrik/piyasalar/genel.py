@@ -4,6 +4,7 @@ from multiprocessing import Pool as __Pool
 import multiprocessing as __mp
 from dateutil import relativedelta as __rd
 from functools import reduce as __red
+import calendar as __calendar
 
 from seffaflik.__ortak.__araclar import make_requests as __make_requests
 from seffaflik.elektrik.piyasalar import ia as __ia, gop as __gop, gip as __gip, dgp as __dgp
@@ -98,7 +99,7 @@ def fiyat(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
     ------------
     baslangic_tarihi : %YYYY-%AA-%GG formatında başlangıç tarihi (Varsayılan: bugün)
     bitis_tarihi     : %YYYY-%AA-%GG formatında bitiş tarihi (Varsayılan: bugün)
-    periyot          : metin formatında periyot(saatlik, günlük, aylik, yillik) (Varsayılan: "günlük")
+    periyot          : metin formatında periyot(saatlik, gunluk, aylik, yillik) (Varsayılan: "gunluk")
 
     Geri Dönüş Değeri
     -----------------
@@ -109,26 +110,41 @@ def fiyat(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
             df_gop = __gop.ptf(baslangic_tarihi, bitis_tarihi)
             df_gip = __gip.aof(baslangic_tarihi, bitis_tarihi)
             df_dgp = __dgp.smf(baslangic_tarihi, bitis_tarihi)[["Tarih", "Saat", "SMF"]]
-            df_fiyat = __red(lambda left, right: __pd.merge(left, right, on=["Tarih", "Saat"]),
+            df_fiyat = __red(lambda left, right: __pd.merge(left, right, on=["Tarih", "Saat"], how="outer"),
                              [df_gop, df_gip, df_dgp])
             return df_fiyat
-        else:
-            periods = {"gunluk": "DAILY", "aylik": "MONTHLY", "yillik": "YEAR"}
-            try:
-                particular_url = __first_part_url + "market-volume" + "?startDate=" + baslangic_tarihi + "&endDate=" \
-                                 + bitis_tarihi + "&period=" + periods[periyot.lower()]
-                json = __make_requests(particular_url)
-                df = __pd.DataFrame(json["body"]["marketVolumeList"])
-                df["Tarih"] = __pd.to_datetime(df["date"].apply(lambda d: d[:10]))
-                df.rename(index=str,
-                          columns={"bilateralContractAmount": "İA Miktarı", "dayAheadMarketVolume": "GÖP Mİktarı",
-                                   "intradayVolume": "GİP Mİktarı", "balancedPowerMarketVolume": "DGP Miktarı"},
-                          inplace=True)
-                df = df[["Tarih", "İA Miktarı", "GÖP Mİktarı", "GİP Mİktarı", "DGP Miktarı"]]
-            except (KeyError, TypeError):
-                return __pd.DataFrame()
-            else:
-                return df
+        elif periyot.lower() == "gunluk":
+            df_gop = __gop.ptf(baslangic_tarihi, bitis_tarihi)
+            df_gip = __gip.aof(baslangic_tarihi, bitis_tarihi)
+            df_dgp = __dgp.smf(baslangic_tarihi, bitis_tarihi)[["Tarih", "Saat", "SMF"]]
+            df_fiyat = __red(lambda left, right: __pd.merge(left, right, on=["Tarih", "Saat"], how="outer"),
+                             [df_gop, df_gip, df_dgp])
+            return df_fiyat.groupby("Tarih").mean().reset_index().drop("Saat", axis=1)
+        elif periyot.lower() == "aylik":
+            baslangic_tarihi = __dt.datetime.strptime(baslangic_tarihi, '%Y-%m-%d').replace(day=1).strftime("%Y-%m-%d")
+            bitis_tarihi = __dt.datetime.strptime(bitis_tarihi, '%Y-%m-%d')
+            bitis_tarihi = __dt.date(bitis_tarihi.year, bitis_tarihi.month,
+                                     __calendar.monthrange(bitis_tarihi.year, bitis_tarihi.month)[-1]).strftime(
+                "%Y-%m-%d")
+            df_gop = __gop.ptf(baslangic_tarihi, bitis_tarihi)
+            df_gip = __gip.aof(baslangic_tarihi, bitis_tarihi)
+            df_dgp = __dgp.smf(baslangic_tarihi, bitis_tarihi)[["Tarih", "Saat", "SMF"]]
+            df_fiyat = __red(lambda left, right: __pd.merge(left, right, on=["Tarih", "Saat"], how="outer"),
+                             [df_gop, df_gip, df_dgp])
+            df_fiyat["Yıl-Ay"] = df_fiyat["Tarih"].dt.to_period('M')
+            return df_fiyat.groupby("Yıl-Ay").mean().reset_index().drop("Saat", axis=1)
+        elif periyot.lower() == "yillik":
+            baslangic_tarihi = __dt.datetime.strptime(baslangic_tarihi, '%Y-%m-%d').replace(day=1, month=1).strftime(
+                "%Y-%m-%d")
+            bitis_tarihi = __dt.datetime.strptime(bitis_tarihi, '%Y-%m-%d').replace(day=31, month=12).strftime(
+                "%Y-%m-%d")
+            df_gop = __gop.ptf(baslangic_tarihi, bitis_tarihi)
+            df_gip = __gip.aof(baslangic_tarihi, bitis_tarihi)
+            df_dgp = __dgp.smf(baslangic_tarihi, bitis_tarihi)[["Tarih", "Saat", "SMF"]]
+            df_fiyat = __red(lambda left, right: __pd.merge(left, right, on=["Tarih", "Saat"], how="outer"),
+                             [df_gop, df_gip, df_dgp])
+            df_fiyat["Yıl"] = df_fiyat["Tarih"].dt.to_period('Y')
+            return df_fiyat.groupby("Yıl").mean().reset_index().drop("Saat", axis=1)
 
 
 def __katilimci_sayisi(tarih):

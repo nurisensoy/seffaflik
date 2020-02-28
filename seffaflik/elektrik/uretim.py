@@ -101,7 +101,7 @@ def kgup(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
 
     Geri Dönüş Değeri
     -----------------
-    KGUP (Tarih, Saat, Doğalgaz, Barajlı, Linyit, Akarsu, İthal Kömür, Rüzgar, Fuel Oil, Jeo Termal, Taş Kömür, Biokütle
+    KGUP (Tarih, Saat, Doğalgaz, Barajlı, Linyit, Akarsu, İthal Kömür, Rüzgar, Fuel Oil, Jeo Termal, Taş Kömür, Biyokütle
     ,Nafta, Diğer, Toplam)
     """
     if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
@@ -201,7 +201,7 @@ def eak(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
 
     Geri Dönüş Değeri
     -----------------
-    EAK (Tarih, Saat, Doğalgaz, Barajlı, Linyit, Akarsu, İthal Kömür, Rüzgar, Fuel Oil, Jeo Termal, Taş Kömür, Biokütle,
+    EAK (Tarih, Saat, Doğalgaz, Barajlı, Linyit, Akarsu, İthal Kömür, Rüzgar, Fuel Oil, Jeo Termal, Taş Kömür, Biyokütle,
     Nafta, Diğer, Toplam)
     """
     if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
@@ -213,7 +213,7 @@ def eak(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
             df["Saat"] = df["tarih"].apply(lambda h: int(h[11:13]))
             df["Tarih"] = __pd.to_datetime(df["tarih"].apply(lambda d: d[:10]))
             df.rename(index=str,
-                      columns={"akarsu": "Akarsu", "barajli": "Barajlı", "biyokutle": "Biokütle", "diger": "Diğer",
+                      columns={"akarsu": "Akarsu", "barajli": "Barajlı", "biokutle": "Biyokütle", "diger": "Diğer",
                                "dogalgaz": "Doğalgaz", "fuelOil": "Fuel Oil", "ithalKomur": "İthal Kömür",
                                "jeotermal": "Jeo Termal", "linyit": "Linyit", "nafta": "Nafta",
                                "ruzgar": "Rüzgar", "tasKomur": "Taş Kömür", "toplam": "Toplam"}, inplace=True)
@@ -303,7 +303,7 @@ def kudup(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
     Geri Dönüş Değeri
     -----------------
     KUDÜP (Tarih, Saat, Doğalgaz, Barajlı, Linyit, Akarsu, İthal Kömür, Rüzgar, Fuel Oil, Jeo Termal, Taş Kömür,
-    Biokütle, Nafta, Diğer, Toplam)
+    Biyokütle, Nafta, Diğer, Toplam)
     """
     if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:

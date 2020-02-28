@@ -6,6 +6,7 @@ from functools import reduce as __red
 
 from seffaflik.__ortak.__araclar import make_requests as __make_requests
 from seffaflik.__ortak import __dogrulama as __dogrulama
+from seffaflik.elektrik import santraller as __santraller
 
 __first_part_url = "production/"
 
@@ -391,6 +392,35 @@ def gerceklesen(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
             return __santral_bazli_gerceklesen(baslangic_tarihi, bitis_tarihi, santral_id)
 
 
+def tum_santraller_gerceklesen(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
+                               bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d")):
+    """
+    İlgili tarih aralığı için tüm lisanslı santrallerin gerçek zamanlı üretim bilgisini vermektedir.
+
+    Parametreler
+    ------------
+    baslangic_tarihi : %YYYY-%AA-%GG formatında başlangıç tarihi (Varsayılan: bugün)
+    bitis_tarihi     : %YYYY-%AA-%GG formatında bitiş tarihi (Varsayılan: bugün)
+
+    Geri Dönüş Değeri
+    -----------------
+    Tüm lisanslı santrallerin gerçek zamanlı üretim Değerleri (Tarih, Saat, Santral Üretimleri)
+    """
+    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+        sant = __santraller.gercek_zamanli_uretim_yapan_santraller()
+        list_sant = sant[["Id", "Kısa Adı"]].to_dict("records")
+        list_sant_len = len(list_sant)
+        list_sant = list(
+            zip([baslangic_tarihi] * list_sant_len, [bitis_tarihi] * list_sant_len, list_sant))
+        list_sant = list(map(list, list_sant))
+        with __Pool(__mp.cpu_count()) as p:
+            list_df_unit = p.starmap(__gerceklesen_santral, list_sant, chunksize=1)
+        list_df_unit = list(filter(lambda x: len(x) > 0, list_df_unit))
+        df_unit = __red(lambda left, right: __pd.merge(left, right, how="outer", on=["Tarih", "Saat"], sort=True),
+                        list_df_unit)
+        return df_unit
+
+
 def gddk(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
          bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d")):
     """
@@ -501,6 +531,35 @@ def __santral_bazli_gerceklesen(baslangic_tarihi, bitis_tarihi, santral_id):
             ["Tarih", "Saat", "Doğalgaz", "Barajlı", "Linyit", "Akarsu", "İthal Kömür", "Rüzgar", "Güneş",
              "Fuel Oil", "Jeo Termal", "Asfaltit Kömür", "Taş Kömür", "Biyokütle", "Nafta", "LNG", "Uluslararası",
              "Toplam"]]
+    except (KeyError, TypeError):
+        return __pd.DataFrame()
+    else:
+        return df
+
+
+def __gerceklesen_santral(baslangic_tarihi, bitis_tarihi, santral):
+    """
+    İlgili tarih aralığı ve santral için gerçek zamanlı üretim bilgisini vermektedir.
+
+    Parametreler
+    ------------
+    baslangic_tarihi : %YYYY-%AA-%GG formatında başlangıç tarihi
+    bitis_tarihi     : %YYYY-%AA-%GG formatında bitiş tarihi
+    santral_id       : metin yada tam sayı formatında santral id
+
+    Geri Dönüş Değeri
+    -----------------
+    Santral Bazlı Gerçek Zamanlı Üretim("Tarih", "Saat", "Toplam")
+    """
+    try:
+        particular_url = __first_part_url + "real-time-generation_with_powerplant" + "?startDate=" + \
+                         baslangic_tarihi + "&endDate=" + bitis_tarihi + "&powerPlantId=" + str(santral["Id"])
+        json = __make_requests(particular_url)
+        df = __pd.DataFrame(json["body"]["hourlyGenerations"])
+        df["Saat"] = df["date"].apply(lambda h: int(h[11:13]))
+        df["Tarih"] = __pd.to_datetime(df["date"].apply(lambda d: d[:10]))
+        df.rename(index=str, columns={"total": santral["Kısa Adı"]}, inplace=True)
+        df = df[["Tarih", "Saat", santral["Kısa Adı"]]]
     except (KeyError, TypeError):
         return __pd.DataFrame()
     else:

@@ -207,7 +207,7 @@ def lisansli_gerceklesen(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-
 def birim_maliyet(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                   bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d")):
     """
-    İlgili tarih aralığı için YEKDEM birim maliyet tutarını vermektedir.
+    İlgili tarih aralığı için YEKDEM birim maliyet bilgisini vermektedir.
 
     Parametreler
     ------------
@@ -242,8 +242,7 @@ def birim_maliyet(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
 def donemsel_maliyet(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                      bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d")):
     """
-    İlgili tarih aralığı için saatlik YEKDEM  santrallerin kaynak bazında uzlaştırmaya esas veriş
-    miktarı (UEVM) bilgisini  vermektedir.
+    İlgili tarih aralığı için dönemlik YEKDEM maliyetleri bilgisini  vermektedir.
 
     Parametreler
     ------------
@@ -252,7 +251,7 @@ def donemsel_maliyet(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d")
 
     Geri Dönüş Değeri
     -----------------
-    Saatlik YEKDEM Lisanssiz UEVM (MWh)
+    Dönemsel YEKDEM Maliyeti (MWh)
     """
     if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:

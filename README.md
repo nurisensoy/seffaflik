@@ -75,11 +75,13 @@ seffaflik/
     │   └── yanhizmetler.py
     ├── santraller.py
     ├── tuketim.py
+    ├── yekdem.py
     └── uretim.py
+    
 ```
 Bu çerçevede modüller şu şekilde import edilebilir:
 ```python
-from seffaflik.elektrik import santraller, tuketim, uretim
+from seffaflik.elektrik import santraller, tuketim, uretim, yekdem
 from seffaflik.elektrik.piyasalar import dengesizlik, dgp, genel, gip, gop, ia, yanhizmetler
 ```
 #### Örnek İstekler

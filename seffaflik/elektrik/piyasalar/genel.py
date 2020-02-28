@@ -49,7 +49,7 @@ def hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
     ------------
     baslangic_tarihi : %YYYY-%AA-%GG formatında başlangıç tarihi (Varsayılan: bugün)
     bitis_tarihi     : %YYYY-%AA-%GG formatında bitiş tarihi (Varsayılan: bugün)
-    periyot          : metin formatında periyot(saatlik, günlük, aylik, yillik) (Varsayılan: "günlük")
+    periyot          : metin formatında periyot(saatlik, gunluk, aylik, yillik) (Varsayılan: "gunluk")
 
     Geri Dönüş Değeri
     -----------------

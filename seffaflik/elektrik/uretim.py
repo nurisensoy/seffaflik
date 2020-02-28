@@ -112,12 +112,12 @@ def kgup(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
             df["Saat"] = df["tarih"].apply(lambda h: int(h[11:13]))
             df["Tarih"] = __pd.to_datetime(df["tarih"].apply(lambda d: d[:10]))
             df.rename(index=str,
-                      columns={"akarsu": "Akarsu", "barajli": "Barajlı", "biokutle": "Biokütle", "diger": "Diğer",
+                      columns={"akarsu": "Akarsu", "barajli": "Barajlı", "biokutle": "Biyokütle", "diger": "Diğer",
                                "dogalgaz": "Doğalgaz", "fuelOil": "Fuel Oil", "ithalKomur": "İthal Kömür",
                                "jeotermal": "Jeo Termal", "linyit": "Linyit", "nafta": "Nafta",
                                "ruzgar": "Rüzgar", "tasKomur": "Taş Kömür", "toplam": "Toplam"}, inplace=True)
             df = df[["Tarih", "Saat", "Doğalgaz", "Barajlı", "Linyit", "Akarsu", "İthal Kömür", "Rüzgar",
-                     "Fuel Oil", "Jeo Termal", "Taş Kömür", "Biokütle", "Nafta", "Diğer", "Toplam"]]
+                     "Fuel Oil", "Jeo Termal", "Taş Kömür", "Biyokütle", "Nafta", "Diğer", "Toplam"]]
         except (KeyError, TypeError):
             return __pd.DataFrame()
         else:
@@ -153,6 +153,36 @@ def tum_organizasyonlar_kgup(baslangic_tarihi=__dt.datetime.today().strftime("%Y
         return df_unit
 
 
+def tum_uevcb_kgup(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
+                   bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d")):
+    """
+    İlgili tarih aralığı için Kesinleşmiş Gün Öncesi Üretim Planı (KGÜP) girebilecek olan tüm organizasyonların
+    uzlaştırmaya esas veriş-çekiş birimlerinin saatlik KGUP bilgilerini vermektedir.
+
+    Parametreler
+    ------------
+    baslangic_tarihi : %YYYY-%AA-%GG formatında başlangıç tarihi (Varsayılan: bugün)
+    bitis_tarihi     : %YYYY-%AA-%GG formatında bitiş tarihi (Varsayılan: bugün)
+
+    Geri Dönüş Değeri
+    -----------------
+    KGÜP Girebilen Organizasyonların UEVCB KGUP Değerleri (Tarih, Saat, KGUP)
+    """
+    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+        org_uevcb = tum_organizasyonlar_veris_cekis_birimleri()
+        list_org_uevcb = org_uevcb[["Org EIC Kodu", "UEVÇB EIC Kodu", "UEVÇB Adı"]].to_dict("records")
+        list_org_uevcb_len = len(list_org_uevcb)
+        list_date_org_uevcb_eic = list(
+            zip([baslangic_tarihi] * list_org_uevcb_len, [bitis_tarihi] * list_org_uevcb_len, list_org_uevcb))
+        list_date_org_uevcb_eic = list(map(list, list_date_org_uevcb_eic))
+        with __Pool(__mp.cpu_count()) as p:
+            list_df_unit = p.starmap(__kgup_uevcb, list_date_org_uevcb_eic, chunksize=1)
+        list_df_unit = list(filter(lambda x: len(x) > 0, list_df_unit))
+        df_unit = __red(lambda left, right: __pd.merge(left, right, how="outer", on=["Tarih", "Saat"], sort=True),
+                        list_df_unit)
+        return df_unit
+
+
 def eak(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
         bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"), organizasyon_eic="", uevcb_eic=""):
     """
@@ -182,12 +212,12 @@ def eak(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
             df["Saat"] = df["tarih"].apply(lambda h: int(h[11:13]))
             df["Tarih"] = __pd.to_datetime(df["tarih"].apply(lambda d: d[:10]))
             df.rename(index=str,
-                      columns={"akarsu": "Akarsu", "barajli": "Barajlı", "biokutle": "Biokütle", "diger": "Diğer",
+                      columns={"akarsu": "Akarsu", "barajli": "Barajlı", "biyokutle": "Biokütle", "diger": "Diğer",
                                "dogalgaz": "Doğalgaz", "fuelOil": "Fuel Oil", "ithalKomur": "İthal Kömür",
                                "jeotermal": "Jeo Termal", "linyit": "Linyit", "nafta": "Nafta",
                                "ruzgar": "Rüzgar", "tasKomur": "Taş Kömür", "toplam": "Toplam"}, inplace=True)
             df = df[["Tarih", "Saat", "Doğalgaz", "Barajlı", "Linyit", "Akarsu", "İthal Kömür", "Rüzgar",
-                     "Fuel Oil", "Jeo Termal", "Taş Kömür", "Biokütle", "Nafta", "Diğer", "Toplam"]]
+                     "Fuel Oil", "Jeo Termal", "Taş Kömür", "Biyokütle", "Nafta", "Diğer", "Toplam"]]
         except (KeyError, TypeError):
             return __pd.DataFrame()
         else:
@@ -217,6 +247,36 @@ def tum_organizasyonlar_eak(baslangic_tarihi=__dt.datetime.today().strftime("%Y-
         list_date_org_eic = list(map(list, list_date_org_eic))
         with __Pool(__mp.cpu_count()) as p:
             list_df_unit = p.starmap(__eak, list_date_org_eic, chunksize=1)
+        list_df_unit = list(filter(lambda x: len(x) > 0, list_df_unit))
+        df_unit = __red(lambda left, right: __pd.merge(left, right, how="outer", on=["Tarih", "Saat"], sort=True),
+                        list_df_unit)
+        return df_unit
+
+
+def tum_uevcb_eak(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
+                  bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d")):
+    """
+    İlgili tarih aralığı için Emre Amade Kapasite (EAK) girebilecek olan tüm organizasyonların uzlaştırmaya esas
+    veriş-çekiş birimlerinin saatlik KGUP bilgilerini vermektedir.
+
+    Parametreler
+    ------------
+    baslangic_tarihi : %YYYY-%AA-%GG formatında başlangıç tarihi (Varsayılan: bugün)
+    bitis_tarihi     : %YYYY-%AA-%GG formatında bitiş tarihi (Varsayılan: bugün)
+
+    Geri Dönüş Değeri
+    -----------------
+    KGÜP Girebilen Organizasyonların UEVCB KGUP Değerleri (Tarih, Saat, KGUP)
+    """
+    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+        org_uevcb = tum_organizasyonlar_veris_cekis_birimleri()
+        list_org_uevcb = org_uevcb[["Org EIC Kodu", "UEVÇB EIC Kodu", "UEVÇB Adı"]].to_dict("records")
+        list_org_uevcb_len = len(list_org_uevcb)
+        list_date_org_uevcb_eic = list(
+            zip([baslangic_tarihi] * list_org_uevcb_len, [bitis_tarihi] * list_org_uevcb_len, list_org_uevcb))
+        list_date_org_uevcb_eic = list(map(list, list_date_org_uevcb_eic))
+        with __Pool(__mp.cpu_count()) as p:
+            list_df_unit = p.starmap(__eak_uevcb, list_date_org_uevcb_eic, chunksize=1)
         list_df_unit = list(filter(lambda x: len(x) > 0, list_df_unit))
         df_unit = __red(lambda left, right: __pd.merge(left, right, how="outer", on=["Tarih", "Saat"], sort=True),
                         list_df_unit)
@@ -253,12 +313,12 @@ def kudup(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
             df["Saat"] = df["tarih"].apply(lambda h: int(h[11:13]))
             df["Tarih"] = __pd.to_datetime(df["tarih"].apply(lambda d: d[:10]))
             df.rename(index=str,
-                      columns={"akarsu": "Akarsu", "barajli": "Barajlı", "biokutle": "Biokütle", "diger": "Diğer",
+                      columns={"akarsu": "Akarsu", "barajli": "Barajlı", "biokutle": "Biyokütle", "diger": "Diğer",
                                "dogalgaz": "Doğalgaz", "fuelOil": "Fuel Oil", "ithalKomur": "İthal Kömür",
                                "jeotermal": "Jeo Termal", "linyit": "Linyit", "nafta": "Nafta",
                                "ruzgar": "Rüzgar", "tasKomur": "Taş Kömür", "toplam": "Toplam"}, inplace=True)
             df = df[["Tarih", "Saat", "Doğalgaz", "Barajlı", "Linyit", "Akarsu", "İthal Kömür", "Rüzgar",
-                     "Fuel Oil", "Jeo Termal", "Taş Kömür", "Biokütle", "Nafta", "Diğer", "Toplam"]]
+                     "Fuel Oil", "Jeo Termal", "Taş Kömür", "Biyokütle", "Nafta", "Diğer", "Toplam"]]
         except (KeyError, TypeError):
             return __pd.DataFrame()
         else:
@@ -290,14 +350,14 @@ def uevm(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
             df["Tarih"] = __pd.to_datetime(df["date"].apply(lambda d: d[:10]))
             df.rename(index=str,
                       columns={"asphaltite": "Asfaltit Kömür", "river": "Akarsu", "dam": "Barajlı",
-                               "biomass": "Biokütle", "naturalGas": "Doğalgaz", "fueloil": "Fuel Oil",
+                               "biomass": "Biyokütle", "naturalGas": "Doğalgaz", "fueloil": "Fuel Oil",
                                "importedCoal": "İthal Kömür", "geothermal": "Jeo Termal", "lignite": "Linyit",
                                "naphtha": "Nafta", "lng": "LNG", "wind": "Rüzgar", "stonecoal": "Taş Kömür",
                                "international": "Uluslararası", "total": "Toplam", "other": "Diğer"},
                       inplace=True)
             df = df[
                 ["Tarih", "Saat", "Doğalgaz", "Barajlı", "Linyit", "Akarsu", "İthal Kömür", "Rüzgar",
-                 "Fuel Oil", "Jeo Termal", "Asfaltit Kömür", "Taş Kömür", "Biokütle", "Nafta", "LNG", "Uluslararası",
+                 "Fuel Oil", "Jeo Termal", "Asfaltit Kömür", "Taş Kömür", "Biyokütle", "Nafta", "LNG", "Uluslararası",
                  "Diğer", "Toplam"]]
         except (KeyError, TypeError):
             return __pd.DataFrame()
@@ -331,6 +391,42 @@ def gerceklesen(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
             return __santral_bazli_gerceklesen(baslangic_tarihi, bitis_tarihi, santral_id)
 
 
+def gddk(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
+         bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d")):
+    """
+    İlgili tarih aralığı için geriye dönük düzeltme kalemine (GDDK) ait değerleri vermektedir.
+
+    Parametreler
+    ------------
+    baslangic_tarihi : %YYYY-%AA-%GG formatında başlangıç tarihi (Varsayılan: bugün)
+    bitis_tarihi     : %YYYY-%AA-%GG formatında bitiş tarihi (Varsayılan: bugün)
+
+    Geri Dönüş Değeri
+    -----------------
+    Dönemlik GDDK (₺)
+    """
+    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+        try:
+            particular_url = \
+                __first_part_url + "gddk-amount" + "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi
+            json = __make_requests(particular_url)
+            df = __pd.DataFrame(json["body"]["gddkAmountList"])
+            df["Dönem"] = df["id"].apply(
+                lambda x: str(__pd.to_datetime(x["date"][:10]).month_name(locale='tr_TR.UTF-8')) + "-" + str(
+                    __pd.to_datetime(x["date"][:10]).year))
+            df["Versiyon"] = df["id"].apply(
+                lambda x: str(__pd.to_datetime(x["version"][:10]).month_name(locale='tr_TR.UTF-8')) + "-" + str(
+                    __pd.to_datetime(x["version"][:10]).year))
+            df.rename(index=str,
+                      columns={"gddkCreditAmount": "Alacak GDDK Tutarı (TL)", "gddkDebtAmount": "Borç GDDK Tutarı (TL)",
+                               "gddkNetAmount": "Net GDDK Tutarı (TL)"}, inplace=True)
+            df = df[["Dönem", "Versiyon", "Alacak GDDK Tutarı (TL)", "Borç GDDK Tutarı (TL)", "Net GDDK Tutarı (TL)"]]
+        except (KeyError, TypeError):
+            return __pd.DataFrame()
+        else:
+            return df
+
+
 def __gerceklesen(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                   bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d")):
     """
@@ -356,14 +452,14 @@ def __gerceklesen(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
         df["Tarih"] = __pd.to_datetime(df["date"].apply(lambda d: d[:10]))
         df.rename(index=str,
                   columns={"asphaltiteCoal": "Asfaltit Kömür", "river": "Akarsu", "dammedHydro": "Barajlı",
-                           "biomass": "Biokütle", "sun": "Güneş", "naturalGas": "Doğalgaz",
+                           "biomass": "Biyokütle", "sun": "Güneş", "naturalGas": "Doğalgaz",
                            "fueloil": "Fuel Oil", "importCoal": "İthal Kömür", "geothermal": "Jeo Termal",
                            "lignite": "Linyit", "naphta": "Nafta", "lng": "LNG", "wind": "Rüzgar",
                            "blackCoal": "Taş Kömür", "importExport": "Uluslararası", "total": "Toplam"},
                   inplace=True)
         df = df[
             ["Tarih", "Saat", "Doğalgaz", "Barajlı", "Linyit", "Akarsu", "İthal Kömür", "Rüzgar", "Güneş",
-             "Fuel Oil", "Jeo Termal", "Asfaltit Kömür", "Taş Kömür", "Biokütle", "Nafta", "LNG", "Uluslararası",
+             "Fuel Oil", "Jeo Termal", "Asfaltit Kömür", "Taş Kömür", "Biyokütle", "Nafta", "LNG", "Uluslararası",
              "Toplam"]]
     except (KeyError, TypeError):
         return __pd.DataFrame()
@@ -396,14 +492,14 @@ def __santral_bazli_gerceklesen(baslangic_tarihi, bitis_tarihi, santral_id):
         df["Tarih"] = __pd.to_datetime(df["date"].apply(lambda d: d[:10]))
         df.rename(index=str,
                   columns={"asphaltiteCoal": "Asfaltit Kömür", "river": "Akarsu", "dammedHydro": "Barajlı",
-                           "biomass": "Biokütle", "sun": "Güneş", "naturalGas": "Doğalgaz",
+                           "biomass": "Biyokütle", "sun": "Güneş", "naturalGas": "Doğalgaz",
                            "fueloil": "Fuel Oil", "importCoal": "İthal Kömür", "geothermal": "Jeo Termal",
                            "lignite": "Linyit", "naphta": "Nafta", "lng": "LNG", "wind": "Rüzgar",
                            "blackCoal": "Taş Kömür", "importExport": "Uluslararası", "total": "Toplam"},
                   inplace=True)
         df = df[
             ["Tarih", "Saat", "Doğalgaz", "Barajlı", "Linyit", "Akarsu", "İthal Kömür", "Rüzgar", "Güneş",
-             "Fuel Oil", "Jeo Termal", "Asfaltit Kömür", "Taş Kömür", "Biokütle", "Nafta", "LNG", "Uluslararası",
+             "Fuel Oil", "Jeo Termal", "Asfaltit Kömür", "Taş Kömür", "Biyokütle", "Nafta", "LNG", "Uluslararası",
              "Toplam"]]
     except (KeyError, TypeError):
         return __pd.DataFrame()
@@ -475,6 +571,38 @@ def __kgup(baslangic_tarihi, bitis_tarihi, org):
             return df
 
 
+def __kgup_uevcb(baslangic_tarihi, bitis_tarihi, org_uevcb):
+    """
+    İlgili tarih aralığı ve uzlaştırmaya esas veriş çekiş birimi için kesinleşmiş günlük üretim prgoramı (KGÜP)
+    bilgisini vermektedir.
+
+    Parametreler
+    ------------
+    baslangic_tarihi : %YYYY-%AA-%GG formatında başlangıç tarihi
+    bitis_tarihi     : %YYYY-%AA-%GG formatında bitiş tarihi
+    org              : dict formatında organizasyon EIC Kodu, Kısa Adı
+
+    Geri Dönüş Değeri
+    -----------------
+    UEVCB KGUP değerleri
+    """
+    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+        try:
+            particular_url = __first_part_url + "dpp" + "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi \
+                             + "&organizationEIC=" + org_uevcb["Org EIC Kodu"] + "&uevcbEIC=" + org_uevcb[
+                                 "UEVÇB EIC Kodu"]
+            json = __make_requests(particular_url)
+            df = __pd.DataFrame(json["body"]["dppList"])
+            df["Saat"] = df["tarih"].apply(lambda h: int(h[11:13]))
+            df["Tarih"] = __pd.to_datetime(df["tarih"].apply(lambda d: d[:10]))
+            df.rename(index=str, columns={"toplam": org_uevcb["UEVÇB Adı"]}, inplace=True)
+            df = df[["Tarih", "Saat", org_uevcb["UEVÇB Adı"]]]
+        except (KeyError, TypeError):
+            return __pd.DataFrame()
+        else:
+            return df
+
+
 def __eak(baslangic_tarihi, bitis_tarihi, org):
     """
     İlgili tarih aralığı ve organizasyon için emre amade kapasite (EAK) bilgisini vermektedir.
@@ -499,6 +627,37 @@ def __eak(baslangic_tarihi, bitis_tarihi, org):
             df["Tarih"] = __pd.to_datetime(df["tarih"].apply(lambda d: d[:10]))
             df.rename(index=str, columns={"toplam": org["Kısa Adı"]}, inplace=True)
             df = df[["Tarih", "Saat", org["Kısa Adı"]]]
+        except (KeyError, TypeError):
+            return __pd.DataFrame()
+        else:
+            return df
+
+
+def __eak_uevcb(baslangic_tarihi, bitis_tarihi, org_uevcb):
+    """
+    İlgili tarih aralığı ve uzlaştırmaya esas veriş çekiş birimi için emre amade kapasite (EAK) bilgisini vermektedir.
+
+    Parametreler
+    ------------
+    baslangic_tarihi : %YYYY-%AA-%GG formatında başlangıç tarihi
+    bitis_tarihi     : %YYYY-%AA-%GG formatında bitiş tarihi
+    org              : dict formatında organizasyon EIC Kodu, Kısa Adı
+
+    Geri Dönüş Değeri
+    -----------------
+    UEVCB EAK değerleri
+    """
+    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+        try:
+            particular_url = __first_part_url + "aic" + "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi \
+                             + "&organizationEIC=" + org_uevcb["Org EIC Kodu"] + "&uevcbEIC=" + org_uevcb[
+                                 "UEVÇB EIC Kodu"]
+            json = __make_requests(particular_url)
+            df = __pd.DataFrame(json["body"]["aicList"])
+            df["Saat"] = df["tarih"].apply(lambda h: int(h[11:13]))
+            df["Tarih"] = __pd.to_datetime(df["tarih"].apply(lambda d: d[:10]))
+            df.rename(index=str, columns={"toplam": org_uevcb["UEVÇB Adı"]}, inplace=True)
+            df = df[["Tarih", "Saat", org_uevcb["UEVÇB Adı"]]]
         except (KeyError, TypeError):
             return __pd.DataFrame()
         else:

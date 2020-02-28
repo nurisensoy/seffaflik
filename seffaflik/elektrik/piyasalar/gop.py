@@ -128,6 +128,44 @@ def tum_organizasyonlar_hacim(baslangic_tarihi=__dt.datetime.today().strftime("%
         return df_unit
 
 
+def tum_gorevli_tedarik_hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
+                              bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"), hacim_tipi="NET"):
+    """
+    İlgili tarih aralığı için tüm görevli tedarik şirketleri için saatlik net hacim bilgilerini vermektedir.
+
+    Parametreler
+    ------------
+    baslangic_tarihi : %YYYY-%AA-%GG formatında başlangıç tarihi (Varsayılan: bugün)
+    bitis_tarihi     : %YYYY-%AA-%GG formatında bitiş tarihi (Varsayılan: bugün)
+    hacim_tipi       : metin formatında hacim tipi ("NET", "ARZ", yada "TALEP") (varsayılan: "NET")
+
+    Geri Dönüş Değeri
+    -----------------
+    Tüm Organizasyonların Saatlik GÖP Hacmi (Tarih, Saat, Hacim)
+    """
+    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+        org = __organizasyonlar()
+        org = org[(org["Adı"].str.contains("K1")) | (org["Adı"].str.contains("K2")) | (
+            org["Adı"].str.contains("K3"))].reset_index(drop=True)
+        list_org = org[["EIC Kodu", "Kısa Adı"]].to_dict("records")
+        org_len = len(list_org)
+        list_date_org_eic = list(zip([baslangic_tarihi] * org_len, [bitis_tarihi] * org_len, list_org))
+        list_date_org_eic = list(map(list, list_date_org_eic))
+        with __Pool(__mp.cpu_count()) as p:
+            if hacim_tipi.lower() == "net":
+                list_df_unit = p.starmap(__organizasyonel_net_hacim, list_date_org_eic, chunksize=1)
+            elif hacim_tipi.lower() == "arz":
+                list_df_unit = p.starmap(__organizasyonel_arz_hacim, list_date_org_eic, chunksize=1)
+            elif hacim_tipi.lower() == "talep":
+                list_df_unit = p.starmap(__organizasyonel_talep_hacim, list_date_org_eic, chunksize=1)
+            else:
+                __logging.error("Lütfen geçerli bir hacim tipi giriniz: Net, Arz, Talep", exc_info=False)
+        list_df_unit = list(filter(lambda x: len(x) > 0, list_df_unit))
+        df_unit = __red(lambda left, right: __pd.merge(left, right, how="outer", on=["Tarih", "Saat"], sort=True),
+                        list_df_unit)
+        return df_unit
+
+
 def arz_talep_egrisi(tarih=__dt.datetime.today().strftime("%Y-%m-%d")):
     """
     İlgili tarih için saatlik arz-talep eğrisinde bulunan fiyat-miktar ikililerini vermektedir.

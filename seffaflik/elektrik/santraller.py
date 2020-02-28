@@ -112,32 +112,6 @@ def gercek_zamanli_uretim_yapan_santraller():
         return df
 
 
-def yekdem_santralleri(tarih=__dt.datetime.now().strftime("%Y-%m-%d")):
-    """
-    İlgili tarihte EPİAŞ sistemine kayıtlı YEKDEM santral bilgilerini vermektedir.
-
-    Parametre
-    ----------
-    tarih : %YYYY-%AA-%GG formatında tarih (Varsayılan: bugün)
-
-    Geri Dönüş Değeri
-    -----------------
-    Santral Bilgileri(Id, Adı, EIC Kodu, Kısa Adı)
-    """
-    if __dogrulama.__tarih_dogrulama(tarih):
-        try:
-            particular_url = __first_part_url + "renewable-sm-licensed-power-plant-list?period=" + tarih
-            json = __make_requests(particular_url)
-            df = __pd.DataFrame(json["body"]["powerPlantList"])
-            df.rename(index=str, columns={"id": "Id", "name": "Adı", "eic": "EIC Kodu",
-                                          "shortName": "Kısa Adı"}, inplace=True)
-            df = df[["Id", "Adı", "EIC Kodu", "Kısa Adı"]]
-        except (KeyError, TypeError):
-            return __pd.DataFrame()
-        else:
-            return df
-
-
 def kurulu_guc(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d")):
     """
@@ -162,33 +136,6 @@ def kurulu_guc(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
             ilk = ilk + __rd.relativedelta(months=+1)
         with __Pool(__mp.cpu_count()) as p:
             df_list = p.map(__kurulu_guc, date_list)
-        return __pd.concat(df_list, sort=False)
-
-
-def yekdem_kurulu_guc(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
-                      bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d")):
-    """
-    İlgili tarih aralığına tekabül eden aylar için EPİAŞ sistemine kayıtlı YEKDEM santrallerin kaynak bazlı toplam
-    kurulu güç bilgisini vermektedir.
-
-    Parametreler
-    ------------
-    baslangic_tarihi : %YYYY-%AA-%GG formatında başlangıç tarihi (Varsayılan: bugün)
-    bitis_tarihi     : %YYYY-%AA-%GG formatında bitiş tarihi (Varsayılan: bugün)
-
-    Geri Dönüş Değeri
-    -----------------
-    Kurulu Güç Bilgisi (Tarih, Kurulu Güç)
-    """
-    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
-        ilk = __dt.datetime.strptime(baslangic_tarihi[:7], '%Y-%m')
-        son = __dt.datetime.strptime(bitis_tarihi[:7], '%Y-%m')
-        date_list = []
-        while ilk <= son and ilk <= __dt.datetime.today():
-            date_list.append(ilk.strftime("%Y-%m-%d"))
-            ilk = ilk + __rd.relativedelta(months=+1)
-        with __Pool(__mp.cpu_count()) as p:
-            df_list = p.map(__yekdem_kurulu_guc, date_list)
         return __pd.concat(df_list, sort=False)
 
 
@@ -255,34 +202,6 @@ def __kurulu_guc(tarih):
         df.insert(loc=0, column="Tarih", value=__pd.to_datetime(tarih))
         df.rename(index=str, columns={"capacity": "Kurulu Güç"}, inplace=True)
         df = df[["Tarih", "Kurulu Güç"]]
-    except (KeyError, TypeError):
-        return __pd.DataFrame()
-    else:
-        return df
-
-
-def __yekdem_kurulu_guc(tarih):
-    """
-    İlgili tarih için EPİAŞ sistemine kayıtlı yekdem kapsamındaki santrallerin kaynak bazlı toplam kurulu güç bilgisini
-    vermektedir.
-
-    Parametre
-    ----------
-    tarih : %YYYY-%AA-%GG formatında tarih (Varsayılan: bugün)
-
-    Geri Dönüş Değeri
-    -----------------
-    Kurulu Güç Bilgisi (Tarih, Kurulu Güç)
-    """
-    try:
-        particular_url = __first_part_url + "installed-capacity-of-renewable?period=" + tarih
-        json = __make_requests(particular_url)
-        df = __pd.DataFrame(json["body"]["installedCapacityOfRenewableList"])
-        columns = df["capacityType"].values
-        df = df[["capacity"]].transpose()
-        df.set_axis(columns, axis=1, inplace=True)
-        df.reset_index(drop=True, inplace=True)
-        df.insert(loc=0, column="Tarih", value=__pd.to_datetime(tarih))
     except (KeyError, TypeError):
         return __pd.DataFrame()
     else:

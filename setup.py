@@ -1,11 +1,12 @@
 from setuptools import setup, find_packages
+import seffaflik
 
 with open("README.md", encoding="utf-8") as f:
     long_description = f.read()
 
 setup(
     name="seffaflik",
-    version="v0.0.4.dev3",
+    version=seffaflik.__version__,
     author='Dr. Nuri Şensoy',
     author_email='nuri.sensoy@epias.com.tr',
     description="EPİAŞ tarafından Şeffaflık Platformunda yayımlanmakta olan verileri çekmek için tasarlanmış Python "

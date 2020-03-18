@@ -3,6 +3,7 @@ import datetime as __dt
 from dateutil import relativedelta as __rd
 from multiprocessing import Pool as __Pool
 import multiprocessing as __mp
+import requests as __requests
 
 from seffaflik.__ortak.__araclar import make_requests as __make_requests
 from seffaflik.__ortak import __dogrulama as __dogrulama
@@ -276,6 +277,28 @@ def donemsel_maliyet(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d")
             return __pd.DataFrame()
         else:
             return df
+
+
+def res_uretim_tahmini():
+    """
+    Türkiye geneli izlenebilen RES'lerin ertesi gün için toplam güç üretim tahmini bilgisini vermektedir.
+    Not: İlgili veri ritm.gov.tr üzerinden temin edilmektedir.
+
+    Parametreler
+    ------------
+
+    Geri Dönüş Değeri
+    -----------------
+    RES Üretim Tahmini (MWh)
+    """
+    r = __requests.get("http://www.ritm.gov.tr/amline/data_file_ritm.txt")
+    df = __pd.DataFrame(r.text.split("\n")[1:][:-1])
+    df = __pd.DataFrame(df[0].str.split(",").tolist(), columns=["Tarih", "Q5", "Q25", "Q75", "Q95", "Tahmin", "Üretim"])
+    df["Saat"] = df["Tarih"].apply(lambda x: x.split(" ")[1])
+    df["Tarih"] = df["Tarih"].apply(lambda x: __pd.to_datetime(x.split(" ")[0]))
+    df = df[["Tarih", "Saat", "Q5", "Q25", "Q75", "Q95", "Tahmin"]]
+    tomorrow = (__dt.datetime.today() + __rd.relativedelta(days=+1)).strftime("%Y-%m-%d")
+    return df[df["Tarih"] == tomorrow]
 
 
 def __gerceklesen(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),

@@ -1,6 +1,7 @@
 # ŞEFFAFLIK PLATFORMU PYTHON KÜTÜPHANESİ
 Enerji Piyasaları İşletme A.Ş. (EPİAŞ) tarafından Türkiye enerji piyasalarına dair hem şeffaflık platformu web sitesi hem de web servisi aracılığıyla paylaşılmakta olan verilerin kolaylıkla çekilebilmesini sağlayan bir python kütüphanesi tasarlanmıştır. Kütühane ile birlikte kullanıcılar şeffaflık kütühanesi ile direk olarak paylaşılan verileri elde edebilecekleri gibi dolaylı yoldan elde edilebilecek verilere de kolaylıkla ulaşabileceklerdir. 
-## Enerji Piyasaları İşletme A.Ş. (EPİAŞ)
+
+## EPİAŞ Şeffaflık Platformu
 [EPİAŞ](https://www.epias.com.tr/)’ın başlıca amacı ve faaliyet konusu,
 “ Piyasa işletim lisansında yer alan enerji piyasalarının etkin, şeffaf,
 güvenilir ve enerji piyasasının ihtiyaçlarını karşılayacak şekilde planlanması,
@@ -10,7 +11,6 @@ katılımcı sayısı, ürün çeşitliliği ve işlem hacmiyle likiditenin en �
 ulaştığı, piyasa birleşmeleri yoluyla ticaret yapılmasına imkan tanıyan bir
 enerji piyasası işletmecisi olmaktır.”
 
-## EPİAŞ Şeffaflık Platformu
 EPİAŞ, işlettiği piyasalarda katılımcıların işlemlerini fırsat eşitliliği
 çerçevesinde yürütebilmesi, piyasadaki bilgi asimetrisinin önlenmesi ve
 katılımcıların yapacakları işlemlerde doğru karar verebilmeleri için bir merkezi

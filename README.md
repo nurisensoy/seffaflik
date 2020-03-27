@@ -23,7 +23,7 @@ Hizmeti ile tüm verilere ulaşabilme iznini almaları geremektedir. Bunun için
 öncelikle kullanıcıların Şeffaflık Platformunda yayımlanan
 [Web Servis Şartnamesini](https://www.epias.com.tr/wp-content/uploads/2016/10/Web-Servis-%C5%9Eartnamesi-1.docx)
 doldurmaları ve "seffaflik@epias.com.tr" mail adresi üzerinden doldurulmuş
-şartnameyi firma ile paylaşmaları gerekmektedir.
+şartnameyi firma ile paylaşmaları gerekmektedir. Kullanıcılar şeffaflık platformu [kullanıcı kılavuzundaki](https://www.epias.com.tr/wp-content/uploads/2018/02/TR_API_PORTALI_KULLANICI_KILAVUZU.pdf) adımları takip ederek istemci tanıtıcılarını (client id) temin etmelidirler. SOnrasında ise kullanıcılar aşağıdaki adımları takip ederek kütüphaneyi kullanmaya başlayabilirler. 
 
 ## Kurulum
 #### Gereksinimler
@@ -39,8 +39,7 @@ $ pip install seffaflik
 ```
 
 #### Kimlik (Client Id) Oluşturulması
-Kütüphane yükleme işlemini tamamladıktan sonra kütüphane aracılığıyla veri çekiş işlemini gerçekleştirebilmeniz için 
-aşağıda belirtilen kimlik oluşturma sürecini de tamamlamış olmanız gerekmektedir.
+Kütüphane yükleme işlemini tamamladıktan sonra kütüphane aracılığıyla veri çekiş işlemini gerçekleştirebilmeniz için temin etmiş olduğunuz istemci taniticisi (client id) ile aşağıda belirtilen kimlik oluşturma sürecini de tamamlamış olmanız gerekmektedir.
 
 ```python
 import seffaflik

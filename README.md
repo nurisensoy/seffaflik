@@ -13,7 +13,9 @@ $ pip install seffaflik
 ```
 
 ### Kimlik (Client Id) Oluşturulması
-Kütüphane yükleme işlemini tamamladıktan sonra kütüphane aracılığıyla veri çekiş işlemini gerçekleştirebilmeniz için temin etmiş olduğunuz **istemci taniticisi (client id)** ile aşağıda belirtilen kimlik oluşturma sürecini de tamamlamış olmanız gerekmektedir.
+Kütüphane yükleme işlemini tamamladıktan sonra kütüphane aracılığıyla veri çekiş işlemini gerçekleştirebilmeniz için 
+temin etmiş olduğunuz **istemci taniticisi (client id)** ile aşağıda belirtilen kimlik oluşturma sürecini de tamamlamış 
+olmanız gerekmektedir. [İstemci tanitici (client id) nasıl temin edilir?](https://nurisensoy.github.io/seffaflikplatformu/nedir)
 
 ```python
 import seffaflik
@@ -52,7 +54,7 @@ seffaflik/
     └── uretim.py
     
 ```
-Bu çerçevede modüller şu şekilde import edilebilir:
+Bu çerçevede tüm modüller şu şekilde import edilebilir:
 ```python
 from seffaflik.elektrik import santraller, tuketim, uretim, yekdem
 from seffaflik.elektrik.piyasalar import dengesizlik, dgp, genel, gip, gop, ia, yanhizmetler

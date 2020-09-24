@@ -296,9 +296,8 @@ def res_uretim_tahmini():
     df = __pd.DataFrame(df[0].str.split(",").tolist(), columns=["Tarih", "Q5", "Q25", "Q75", "Q95", "Tahmin", "Üretim"])
     df["Saat"] = df["Tarih"].apply(lambda x: x.split(" ")[1])
     df["Tarih"] = df["Tarih"].apply(lambda x: __pd.to_datetime(x.split(" ")[0], format="%d.%m.%Y"))
-    df = df[["Tarih", "Saat", "Q5", "Q25", "Q75", "Q95", "Tahmin"]]
-    tomorrow = (__dt.datetime.today() + __rd.relativedelta(days=+1)).strftime("%Y-%m-%d")
-    return df[df["Tarih"] == tomorrow]
+    df = df[["Tarih", "Saat", "Q5", "Q25", "Q75", "Q95", "Tahmin", "Üretim"]]
+    return df
 
 
 def __gerceklesen(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),

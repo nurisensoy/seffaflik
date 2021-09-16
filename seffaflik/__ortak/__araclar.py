@@ -41,7 +41,7 @@ def __merge_ia_dfs_evenif_empty(df_arz, df_talep):
 
 
 def make_requests(corresponding_url):
-    main_url = "https://api.epias.com.tr/epias/exchange/transparency/"
+    main_url = "https://seffaflik.epias.com.tr/transparency/service/"
     try:
         resp = __requests.get(main_url + corresponding_url, headers=HEADERS, timeout=__timeout)
         resp.raise_for_status()

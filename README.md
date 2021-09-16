@@ -1,4 +1,10 @@
-
+## Seffaflik: 
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/seffaflik)
+![PyPI](https://img.shields.io/pypi/v/seffaflik)
+![PyPI - License](https://img.shields.io/pypi/l/seffaflik)
+![GitHub last commit](https://img.shields.io/github/last-commit/nurisensoy/seffaflik)
+[![Downloads](https://pepy.tech/badge/seffaflik)](https://pepy.tech/project/seffaflik)
+[![Downloads](https://pepy.tech/badge/seffaflik/month)](https://pepy.tech/project/seffaflik)
 # Kurulum
 ### Gereksinimler
 seffaflik kütüphanesinin kullanımı için gerekli paketler:
@@ -39,6 +45,8 @@ kolaylıkla veri çekiş işlemine başlanabilmektedir. Kütüphanenin paketleri
 tasarlanmıştır:
 ```
 seffaflik/
+├── dogalgaz/
+│   └── stp.py
 └── elektrik/
     ├── piyasalar/
     │   ├── dengesizlik.py
@@ -58,6 +66,7 @@ Bu çerçevede tüm modüller şu şekilde import edilebilir:
 ```python
 from seffaflik.elektrik import santraller, tuketim, uretim, yekdem
 from seffaflik.elektrik.piyasalar import dengesizlik, dgp, genel, gip, gop, ia, yanhizmetler
+from seffaflik.dogalgaz import stp
 ```
 ### Örnek İstekler
 Yukarıda belirtilen modüller import edildikten sonra aşağıda belirtilen örnek istekler yapılabilecektir.
@@ -76,4 +85,8 @@ df = uretim.uevm(baslangic_tarihi='2019-01-01', bitis_tarihi='2019-01-01')
 #### 4. Dönemsel Serbest Tüketici Sayıları
 ```python
 df = tuketim.serbest_tuketici_sayisi("2019-01-01","2019-10-01")
+```
+#### 5. Doğalgaz Sürekli Ticaret Platformu Günlük Fiyat
+```python
+df = stp.gunluk_fiyat("2019-01-01","2019-10-01")
 ```

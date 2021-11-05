@@ -5,7 +5,7 @@ with open("README.md", encoding="utf-8") as f:
 
 setup(
     name="seffaflik",
-    version="0.0.15",
+    version="0.0.17",
     author='Dr. Nuri Şensoy',
     author_email='nuri.sensoy@enerjisauretim.com.tr',
     description="EPİAŞ tarafından Şeffaflık Platformunda yayımlanmakta olan verileri çekmek için tasarlanmış Python "

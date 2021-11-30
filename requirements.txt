@@ -1,0 +1,5 @@
+requests
+pandas
+python-dateutil
+beautifulsoup4
+xlrd

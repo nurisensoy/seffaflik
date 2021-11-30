@@ -40,6 +40,32 @@ def katilimci_sayisi(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d")
         return __pd.concat(df_list, sort=False)
 
 
+def piyasa_katilimcilari():
+    """
+    Piyasa katılımcılarının GÖP, GİP, ve STP piyasalarına katılım durumunu belirtir. Ayrıca tüzel kişi olarak firmanın
+    aktiflik/pasiflik durumunu bildirir.
+
+    Parametreler
+    ------------
+
+    Geri Dönüş Değeri
+    -----------------
+    Organizasyonlar (Adı, GÖP Katılımı, GİP Katılımı, STP Katılımı, Tüzel Kişilik Durumu)
+    """
+    try:
+        particular_url = __first_part_url + "market-participants"
+        json = __make_requests(particular_url)
+        df = __pd.DataFrame(json["body"]["marketParticipantList"])
+        df.rename(columns={"id": "Id", "orgName": "Adı", "damEntry": "GÖP Katılımı", "intraDayEntry": "GİP Katılımı",
+                           "naturalGasMarketEntry": "STP Katılımı", "legalStatus": "Tüzel Kişilik Durumu",
+                           "orgShortName": "Kısa Adı"}, inplace=True)
+        df = df[["Id", "Adı", "Kısa Adı", "GÖP Katılımı", "GİP Katılımı", "STP Katılımı", "Tüzel Kişilik Durumu"]]
+    except (KeyError, TypeError):
+        return __pd.DataFrame()
+    else:
+        return df
+
+
 def hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
           bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"), periyot="gunluk"):
     """

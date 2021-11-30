@@ -3,9 +3,12 @@ import datetime as __dt
 from dateutil import relativedelta as __rd
 from multiprocessing import Pool as __Pool
 import multiprocessing as __mp
+import requests as __requests
+from bs4 import BeautifulSoup as __BeautifulSoup
 
 from seffaflik.__ortak.__araclar import make_requests as __make_requests
 from seffaflik.__ortak import __dogrulama as __dogrulama
+from seffaflik.__ortak.__dogrulama import __bugunden_kucuk_tarih_dogrulama
 
 __first_part_url = "production/"
 
@@ -139,6 +142,41 @@ def kurulu_guc(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
         return __pd.concat(df_list, sort=False)
 
 
+def kurulu_guc_kaynak_bazli(baslangic_tarihi=(__dt.datetime.today() - __dt.timedelta(days=1)).strftime("%Y-%m-%d"),
+                            bitis_tarihi=(__dt.datetime.today() - __dt.timedelta(days=1)).strftime("%Y-%m-%d"),
+                            detay=False):
+    """
+    İlgili tarih aralığına tekabül eden aylar için YTBS tarafından paylaşılmakta olan kaynak ve kuruluş bazlı kurulu
+    güç bilgisini vermektedir.
+
+    Parametreler
+    ------------
+    baslangic_tarihi : %YYYY-%AA-%GG formatında başlangıç tarihi (Varsayılan: bugün)
+    bitis_tarihi     : %YYYY-%AA-%GG formatında bitiş tarihi (Varsayılan: bugün)
+    detay:           : Boolean formatında kuruluş detaylı veya detaysız (Varsayılan: False (Kuruluş Detaysız))
+
+    Geri Dönüş Değeri
+    -----------------
+    Kurulu Güç Bilgisi (Tarih, (Kuruluş), Kaynak, Miktar)
+    """
+    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi) and \
+            __bugunden_kucuk_tarih_dogrulama(bitis_tarihi):
+        ilk = __dt.datetime.strptime(baslangic_tarihi[:7], '%Y-%m')
+        son = __dt.datetime.strptime(bitis_tarihi[:7], '%Y-%m')
+        date_list = []
+        while ilk <= son and ilk.date() < __dt.datetime.today().date():
+            date_list.append(ilk.strftime("%Y-%m-%d"))
+            ilk = ilk + __rd.relativedelta(months=+1)
+        with __Pool(__mp.cpu_count()) as p:
+            df_list = p.map(__ytbs_kurulu_guc, date_list)
+        df = __pd.concat(df_list, sort=False)
+        if detay:
+            return df[["Tarih", "KURULUŞ", "Kaynak", "Miktar"]]
+        else:
+            df = df.groupby(["Tarih", "Kaynak"], as_index=False).sum()[["Tarih", "Kaynak", "Miktar"]]
+            return df.pivot(index="Tarih", columns="Kaynak", values="Miktar").reset_index()
+
+
 def ariza_bakim_bildirimleri(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                              bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d")):
     """
@@ -241,3 +279,32 @@ def __santral_veris_cekis_birimleri(tarih, santral):
         return __pd.DataFrame()
     else:
         return df
+
+
+def __ytbs_kurulu_guc(tarih):
+    url = "https://ytbsbilgi.teias.gov.tr/ytbsbilgi/frm_istatistikler.jsf"
+    r = __requests.get(url)
+    j_session_id = r.cookies.get_dict()["JSESSIONID"]
+    javax_faces_viewstate = \
+        __BeautifulSoup(r.text, features="html.parser").find("input", {"name": "javax.faces.ViewState"})["value"]
+    headers = {
+        "content-type": "application/x-www-form-urlencoded",
+        "cookie": "primefaces.download=true; JSESSIONID={};".format(j_session_id)
+    }
+
+    params = {
+        "formdash": "formdash",
+        "formdash:bitisTarihi2_input": tarih,
+        "formdash:j_idt42.x": 0, "formdash:j_idt42.y": 0,
+        "javax.faces.ViewState": javax_faces_viewstate
+    }
+    r = __requests.post(url=url, params=params, headers=headers)
+    df = __pd.read_excel(io=r.content, sheet_name=None, engine="xlrd")
+
+    capacity = df["Rapor328"].iloc[3:8]
+    capacity.columns = df["Rapor328"].iloc[2]
+    capacity = capacity.drop(columns=["TOPLAM (MW)"])
+    capacity = capacity.melt(id_vars=["KURULUŞ"], var_name="Kaynak", value_name="Miktar")
+    capacity = capacity[capacity["Miktar"] != 0].reset_index(drop=True)
+    capacity["Tarih"] = str(__pd.to_datetime(tarih).replace(day=1).date())
+    return capacity

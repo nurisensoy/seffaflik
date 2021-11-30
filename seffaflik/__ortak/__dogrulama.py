@@ -110,3 +110,11 @@ def __kgup_girebilen_organizasyon_dogrulama(eic):
         else:
             __logging.warning("İlgili eic değeri KGÜP girebilecek organizasyonlar listesinde bulunmamaktadır!")
             return False
+
+
+def __bugunden_kucuk_tarih_dogrulama(tarih):
+    if __datetime.datetime.strptime(tarih, '%Y-%m-%d') <= __datetime.datetime.today() - __datetime.timedelta(days=1):
+        return True
+    else:
+        __logging.warning("Bitiş tarihi bugünden küçük olmalıdır!")
+        return False

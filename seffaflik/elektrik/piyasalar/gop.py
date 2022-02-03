@@ -267,6 +267,78 @@ def blok_miktari(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
             return df
 
 
+def esnek_eslesme_miktari(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
+                          bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d")):
+    """
+    İlgili tarih aralığı için saatlik gün öncesi piyasası teklif edilen ve eşleşen esnek teklif miktar bilgilerini
+    vermektedir.
+
+    Parametreler
+    ------------
+    baslangic_tarihi : %YYYY-%AA-%GG formatında başlangıç tarihi (Varsayılan: bugün)
+    bitis_tarihi   : %YYYY-%AA-%GG formatında bitiş tarihi (Varsayılan: bugün)
+
+    Geri Dönüş Değeri
+    -----------------
+    Saatlik Eşleşen Esnek Teklif Miktarları (MWh)
+    """
+    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+        try:
+            particular_url = __first_part_url + "flexible-offer-amount-hourly" + "?startDate=" + baslangic_tarihi + \
+                             "&endDate=" + bitis_tarihi
+            json = __make_requests(particular_url)
+            df = __pd.DataFrame(json["body"]["getDamFlexibleOffer"])
+            df["Saat"] = df["day"].apply(__pd.to_datetime).dt.hour
+            df["Tarih"] = df["day"].apply(__pd.to_datetime).dt.date.apply(str)
+            df.rename(index=str,
+                      columns={"matchedBuyingFlexibleOfferQuantity": "Esnek Alış Teklif Eşleşme Miktarı",
+                               "matchedSellingFlexibleOfferQuantity": "Esnek Satış Teklif Eşleşme Miktarı"},
+                      inplace=True)
+            df = df[["Tarih", "Saat", "Esnek Alış Teklif Eşleşme Miktarı", "Esnek Satış Teklif Eşleşme Miktarı"]]
+        except (KeyError, TypeError):
+            return __pd.DataFrame()
+        else:
+            return df
+
+
+def esnek_miktari(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
+                  bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d")):
+    """
+    İlgili tarih aralığı için günlük gün öncesi piyasası teklif edilen ve eşleşen esnek teklif miktar bilgilerini
+    vermektedir.
+
+    Parametreler
+    ------------
+    baslangic_tarihi : %YYYY-%AA-%GG formatında başlangıç tarihi (Varsayılan: bugün)
+    bitis_tarihi   : %YYYY-%AA-%GG formatında bitiş tarihi (Varsayılan: bugün)
+
+    Geri Dönüş Değeri
+    -----------------
+    Günlük Teklif Edilen ve Eşleşen Esnek Teklif Miktarları (MWh)
+    """
+    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+        try:
+            particular_url = __first_part_url + "flexible-offer-amount" + "?startDate=" + baslangic_tarihi + \
+                             "&endDate=" + bitis_tarihi
+            json = __make_requests(particular_url)
+            df = __pd.DataFrame(json["body"]["getDamFlexibleOffer"])
+            df["Tarih"] = df["day"].apply(__pd.to_datetime).dt.date.apply(str)
+            df.rename(index=str,
+                      columns={"totalBuyingFlexibleOfferQuantity": "Toplam Esnek Alış Teklif Miktarı",
+                               "matchedBuyingFlexibleOfferQuantity": "Esnek Alış Teklif Eşleşme Miktarı",
+                               "unmatchedBuyingFlexibleOfferQuantity": "Eşleşmeyen Esnek Alış Teklif Miktarı",
+                               "totalSellingFlexibleOfferQuantity": "Toplam Esnek Satış Teklif Miktarı",
+                               "matchedSellingFlexibleOfferQuantity": "Esnek Satış Teklif Eşleşme Miktarı",
+                               "unmatchedSellingFlexibleOfferQuantity": "Eşleşmeyen Esnek Satış Teklif Miktarı"},
+                      inplace=True)
+        except (KeyError, TypeError):
+            return __pd.DataFrame()
+        else:
+            return df[["Tarih", "Toplam Esnek Alış Teklif Miktarı", "Esnek Alış Teklif Eşleşme Miktarı",
+                       "Eşleşmeyen Esnek Alış Teklif Miktarı", "Toplam Esnek Satış Teklif Miktarı",
+                       "Esnek Satış Teklif Eşleşme Miktarı", "Eşleşmeyen Esnek Satış Teklif Miktarı"]]
+
+
 def fark_tutari(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                 bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d")):
     """

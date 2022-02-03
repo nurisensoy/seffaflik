@@ -81,7 +81,7 @@ def hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
     -----------------
     GÖP, GİP, DGP, İA Hacimleri (MWh)
     """
-    if __dogrulama.__baslangic_bitis_tarih__periyot_dogrulama(baslangic_tarihi, bitis_tarihi, periyot):
+    if __dogrulama.__baslangic_bitis_tarih_periyot_dogrulama(baslangic_tarihi, bitis_tarihi, periyot):
         if periyot.lower() == "saatlik":
             df_ia = __ia.hacim(baslangic_tarihi, bitis_tarihi)[["Tarih", "Saat", "Arz Miktarı"]]
             df_ia.rename(index=str, columns={"Arz Miktarı": "İA"}, inplace=True)
@@ -131,7 +131,7 @@ def fiyat(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
     -----------------
     GÖP, GİP, DGP Fiyatları (MWh)
     """
-    if __dogrulama.__baslangic_bitis_tarih__periyot_dogrulama(baslangic_tarihi, bitis_tarihi, periyot):
+    if __dogrulama.__baslangic_bitis_tarih_periyot_dogrulama(baslangic_tarihi, bitis_tarihi, periyot):
         if periyot.lower() == "saatlik":
             df_gop = __gop.ptf(baslangic_tarihi, bitis_tarihi)
             df_gip = __gip.aof(baslangic_tarihi, bitis_tarihi)

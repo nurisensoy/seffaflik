@@ -17,7 +17,7 @@ def __baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         return True
 
 
-def __baslangic_bitis_tarih__periyot_dogrulama(baslangic_tarihi, bitis_tarihi, periyot):
+def __baslangic_bitis_tarih_periyot_dogrulama(baslangic_tarihi, bitis_tarihi, periyot):
     try:
         ilk = __datetime.datetime.strptime(baslangic_tarihi, '%Y-%m-%d')
         son = __datetime.datetime.strptime(bitis_tarihi, '%Y-%m-%d')

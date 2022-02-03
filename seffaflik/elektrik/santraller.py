@@ -144,7 +144,7 @@ def kurulu_guc(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
 
 def kurulu_guc_kaynak_bazli(baslangic_tarihi=(__dt.datetime.today() - __dt.timedelta(days=1)).strftime("%Y-%m-%d"),
                             bitis_tarihi=(__dt.datetime.today() - __dt.timedelta(days=1)).strftime("%Y-%m-%d"),
-                            detay=False):
+                            detay=False, period="AYLIK"):
     """
     İlgili tarih aralığına tekabül eden aylar için YTBS tarafından paylaşılmakta olan kaynak ve kuruluş bazlı kurulu
     güç bilgisini vermektedir.
@@ -153,25 +153,29 @@ def kurulu_guc_kaynak_bazli(baslangic_tarihi=(__dt.datetime.today() - __dt.timed
     ------------
     baslangic_tarihi : %YYYY-%AA-%GG formatında başlangıç tarihi (Varsayılan: bugün)
     bitis_tarihi     : %YYYY-%AA-%GG formatında bitiş tarihi (Varsayılan: bugün)
-    detay:           : Boolean formatında kuruluş detaylı veya detaysız (Varsayılan: False (Kuruluş Detaysız))
+    detay            : Boolean formatında kuruluş detaylı veya detaysız (Varsayılan: False (Kuruluş Detaysız))
+    period           : Dönem Bilgisi (Varsayılan: AYLIK) (AYLIK, YILLIK, GUNLUK)
 
     Geri Dönüş Değeri
     -----------------
     Kurulu Güç Bilgisi (Tarih, (Kuruluş), Kaynak, Miktar)
     """
-    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi) and \
+    if __dogrulama.__baslangic_bitis_tarih_periyot_dogrulama(baslangic_tarihi, bitis_tarihi, period) and \
             __bugunden_kucuk_tarih_dogrulama(bitis_tarihi):
-        ilk = __dt.datetime.strptime(baslangic_tarihi[:7], '%Y-%m')
-        son = __dt.datetime.strptime(bitis_tarihi[:7], '%Y-%m')
+        ilk = __dt.datetime.strptime(baslangic_tarihi, '%Y-%m-%d')
+        son = __dt.datetime.strptime(bitis_tarihi, '%Y-%m-%d')
+        months = 1 if period.lower() == "aylik" else 0
+        years = 1 if period.lower() == "yillik" else 0
+        days = 1 if period.lower() in ["gunluk", "saatlik"] else 0
         date_list = []
         while ilk <= son and ilk.date() < __dt.datetime.today().date():
             date_list.append(ilk.strftime("%Y-%m-%d"))
-            ilk = ilk + __rd.relativedelta(months=+1)
+            ilk = ilk + __rd.relativedelta(months=months, years=years, days=days)
         with __Pool(__mp.cpu_count()) as p:
             df_list = p.map(__ytbs_kurulu_guc, date_list)
         df = __pd.concat(df_list, sort=False)
         if detay:
-            return df[["Tarih", "KURULUŞ", "Kaynak", "Miktar"]]
+            return df.pivot(index="Tarih", values="Miktar", columns=["Kaynak", "KURULUŞ"])
         else:
             df = df.groupby(["Tarih", "Kaynak"], as_index=False).sum()[["Tarih", "Kaynak", "Miktar"]]
             return df.pivot(index="Tarih", columns="Kaynak", values="Miktar").reset_index()
@@ -306,5 +310,5 @@ def __ytbs_kurulu_guc(tarih):
     capacity = capacity.drop(columns=["TOPLAM (MW)"])
     capacity = capacity.melt(id_vars=["KURULUŞ"], var_name="Kaynak", value_name="Miktar")
     capacity = capacity[capacity["Miktar"] != 0].reset_index(drop=True)
-    capacity["Tarih"] = str(__pd.to_datetime(tarih).replace(day=1).date())
+    capacity["Tarih"] = tarih
     return capacity

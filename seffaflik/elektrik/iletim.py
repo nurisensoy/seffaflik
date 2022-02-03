@@ -129,3 +129,73 @@ def kisit_maliyeti(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
             return __pd.DataFrame()
         else:
             return df
+
+
+def nomine_kapasite(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
+                    bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d")):
+    """
+    İlgili tarih aralığı için Nomine Kapasite değerleri, ithalat (satış miktarı) ve ihracat (alış miktarı) için yapılan
+    ikili anlaşmaları vermektedir.
+
+    Parametreler
+    ------------
+    baslangic_tarihi : %YYYY-%AA-%GG formatında başlangıç tarihi (Varsayılan: bugün)
+    bitis_tarihi     : %YYYY-%AA-%GG formatında bitiş tarihi (Varsayılan: bugün)
+
+    Geri Dönüş Değeri
+    -----------------
+    Nomine Kapasite
+    """
+    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+        try:
+            particular_url = __first_part_url + "nominal-capacity" + "?startDate=" + baslangic_tarihi + \
+                             "&endDate=" + bitis_tarihi
+            json = __make_requests(particular_url)
+            df = __pd.DataFrame(json["body"]["nominalCapacitiyList"])
+            df["Saat"] = df["date"].apply(__pd.to_datetime).dt.hour
+            df["Tarih"] = df["date"].apply(__pd.to_datetime).dt.date.apply(str)
+            df = df.rename(columns={"offerQuantity": "İthalat (MWh)", "bidQuantity": "İhracat (MWh)"})
+        except (KeyError, TypeError):
+            return __pd.DataFrame()
+        else:
+            return df[["Tarih", "Saat", "İthalat (MWh)", "İhracat (MWh)"]]
+
+
+def kapasite_talepleri(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
+                       bitis_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
+                       yonler=["TRGR", "GRTR", "TRBG", "BGTR"]):
+    """
+    İlgili tarih aralığı ve yönler için kapasite ihalelerine ait talepleri ve tahsis edilen kapasiteleri vermektedir.
+
+    Parametreler
+    ------------
+    baslangic_tarihi : %YYYY-%AA-%GG formatında başlangıç tarihi (Varsayılan: bugün)
+    bitis_tarihi     : %YYYY-%AA-%GG formatında bitiş tarihi (Varsayılan: bugün)
+    yonler           : list formatında yönler (Varsayılan: ["TRGR", "GRTR", "TRBG", "BGTR"])
+
+    Geri Dönüş Değeri
+    -----------------
+    Kapasite Talepleri
+    """
+    if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
+        try:
+            df_list = []
+            for yon in yonler:
+                particular_url = __first_part_url + "tcat-participant-capacity" + "?startDate=" + baslangic_tarihi + \
+                                 "&endDate=" + bitis_tarihi + "&td=" + yon
+                json = __make_requests(particular_url)
+                df_list.append(__pd.DataFrame(json["body"]["data"]))
+            df = __pd.concat(df_list)
+            df = df.rename(columns={"auctionCode": "İhale Numarası", "td": "Yön", "transferDatetime": "Transfer Zamanı",
+                                    "requestedCapacity": "Katılımcılar Tarafından Talep Edilen Kapasite(MW)",
+                                    "allocatedCapacity": "Tahsis Edilen Kapasite(MW)",
+                                    "clearancePrice": "Takas Fiyatı(EUR/MWh)",
+                                    "participantCount": "Katılımcı Sayısı",
+                                    "winnerCount": "Kazanan Katılımcı Sayısı",
+                                    "bidCount": "Teklif Sayısı"})
+        except (KeyError, TypeError):
+            return __pd.DataFrame()
+        else:
+            return df[["Yön", "İhale Numarası", "Transfer Zamanı", "Katılımcılar Tarafından Talep Edilen Kapasite(MW)",
+                       "Tahsis Edilen Kapasite(MW)", "Takas Fiyatı(EUR/MWh)", "Katılımcı Sayısı",
+                       "Kazanan Katılımcı Sayısı", "Teklif Sayısı"]]

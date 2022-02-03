@@ -308,7 +308,7 @@ def kudup(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
     if __dogrulama.__baslangic_bitis_tarih_dogrulama(baslangic_tarihi, bitis_tarihi):
         try:
             particular_url = __first_part_url + "sbfgp" + "?startDate=" + baslangic_tarihi + "&endDate=" + \
-                             bitis_tarihi + "&organizationId=" + organizasyon_id + "&uevcbId=" + uevcb_id
+                             bitis_tarihi + "&organizationId=" + str(organizasyon_id) + "&uevcbId=" + str(uevcb_id)
             json = __make_requests(particular_url)
             df = __pd.DataFrame(json["body"]["dppList"])
             df["Saat"] = df["tarih"].apply(lambda h: int(h[11:13]))

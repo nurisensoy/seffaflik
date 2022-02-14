@@ -18,7 +18,7 @@ setup(
     name="seffaflik",
     version=__version__,
     author='Dr. Nuri Şensoy',
-    author_email='nuri.sensoy@enerjisauretim.com.tr',
+    author_email='nurisensoy87@gmail.com',
     description="EPİAŞ tarafından Şeffaflık Platformunda yayımlanmakta olan verileri çekmek için tasarlanmış Python "
                 "kütüphanesi",
     long_description=long_description,

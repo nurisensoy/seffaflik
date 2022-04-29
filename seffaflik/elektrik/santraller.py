@@ -305,10 +305,13 @@ def __ytbs_kurulu_guc(tarih):
     r = __requests.post(url=url, params=params, headers=headers)
     df = __pd.read_excel(io=r.content, sheet_name=None, engine="xlrd")
 
-    capacity = df["Rapor328"].iloc[3:8]
+    capacity = df["Rapor328"].iloc[3:]
     capacity.columns = df["Rapor328"].iloc[2]
     capacity = capacity.drop(columns=["TOPLAM (MW)"])
     capacity = capacity.melt(id_vars=["KURULUŞ"], var_name="Kaynak", value_name="Miktar")
     capacity = capacity[capacity["Miktar"] != 0].reset_index(drop=True)
     capacity["Tarih"] = tarih
-    return capacity
+    capacity["Miktar"] = capacity["Miktar"].astype(float)
+    capacity = capacity[(~capacity["KURULUŞ"].str.contains("TOPLAM")) & (~capacity["Kaynak"].str.contains("TOPLAM"))]
+    capacity["Kaynak"] = capacity["Kaynak"].replace({"DOĞALGAZ": "DOĞAL GAZ", "ASFALTİT": "ASFALTİT KÖMÜR"})
+    return capacity.reset_index(drop=True)

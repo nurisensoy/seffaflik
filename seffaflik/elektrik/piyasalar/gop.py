@@ -34,8 +34,9 @@ def ptf(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
             df = __pd.DataFrame(json["body"]["dayAheadMCPList"])
             df["Saat"] = df["date"].apply(lambda h: int(h[11:13]))
             df["Tarih"] = __pd.to_datetime(df["date"].apply(lambda d: d[:10]))
-            df.rename(index=str, columns={"price": "PTF"}, inplace=True)
-            df = df[["Tarih", "Saat", "PTF"]]
+            df.rename(index=str, columns={"price": "PTF", "priceEur": "PTF (EUR/MWh)", "priceUsd": "PTF (USD/MWh)"},
+                      inplace=True)
+            df = df[["Tarih", "Saat", "PTF", "PTF (EUR/MWh)", "PTF (USD/MWh)"]]
         except (KeyError, TypeError):
             return __pd.DataFrame()
         else:

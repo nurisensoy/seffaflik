@@ -58,7 +58,7 @@ def hacim(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
             particular_url = \
                 __first_part_url + "bpm-order-summary" + "?startDate=" + baslangic_tarihi + "&endDate=" + bitis_tarihi
             json = __make_requests(particular_url)
-            df = __pd.DataFrame(json["body"]["bpmorderSummaryList"])
+            df = __pd.DataFrame(json["body"]["bpmOrderSummaryList"])
             df["Saat"] = df["date"].apply(lambda h: int(h[11:13]))
             df["Tarih"] = __pd.to_datetime(df["date"].apply(lambda d: d[:10]))
             df.rename(index=str,

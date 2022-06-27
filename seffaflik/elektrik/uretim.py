@@ -485,12 +485,13 @@ def __gerceklesen(baslangic_tarihi=__dt.datetime.today().strftime("%Y-%m-%d"),
                            "biomass": "Biyokütle", "sun": "Güneş", "naturalGas": "Doğalgaz",
                            "fueloil": "Fuel Oil", "importCoal": "İthal Kömür", "geothermal": "Jeo Termal",
                            "lignite": "Linyit", "naphta": "Nafta", "lng": "LNG", "wind": "Rüzgar",
-                           "blackCoal": "Taş Kömür", "importExport": "Uluslararası", "total": "Toplam"},
+                           "blackCoal": "Taş Kömür", "importExport": "Uluslararası", "total": "Toplam",
+                           "wasteheat": "Atık Isı"},
                   inplace=True)
         df = df[
             ["Tarih", "Saat", "Doğalgaz", "Barajlı", "Linyit", "Akarsu", "İthal Kömür", "Rüzgar", "Güneş",
              "Fuel Oil", "Jeo Termal", "Asfaltit Kömür", "Taş Kömür", "Biyokütle", "Nafta", "LNG", "Uluslararası",
-             "Toplam"]]
+             "Atık Isı", "Toplam"]]
     except (KeyError, TypeError):
         return __pd.DataFrame()
     else:
@@ -525,12 +526,13 @@ def __santral_bazli_gerceklesen(baslangic_tarihi, bitis_tarihi, santral_id):
                            "biomass": "Biyokütle", "sun": "Güneş", "naturalGas": "Doğalgaz",
                            "fueloil": "Fuel Oil", "importCoal": "İthal Kömür", "geothermal": "Jeo Termal",
                            "lignite": "Linyit", "naphta": "Nafta", "lng": "LNG", "wind": "Rüzgar",
-                           "blackCoal": "Taş Kömür", "importExport": "Uluslararası", "total": "Toplam"},
+                           "blackCoal": "Taş Kömür", "importExport": "Uluslararası", "total": "Toplam",
+                           "wasteheat": "Atık Isı"},
                   inplace=True)
         df = df[
             ["Tarih", "Saat", "Doğalgaz", "Barajlı", "Linyit", "Akarsu", "İthal Kömür", "Rüzgar", "Güneş",
              "Fuel Oil", "Jeo Termal", "Asfaltit Kömür", "Taş Kömür", "Biyokütle", "Nafta", "LNG", "Uluslararası",
-             "Toplam"]]
+             "Atık Isı", "Toplam"]]
     except (KeyError, TypeError):
         return __pd.DataFrame()
     else:
